@@ -68,8 +68,7 @@ grunt.loadNpmTasks('winresourcer');
 
 grunt.registerTask('setup', [
   'download-electron',
-  'ensure-config-exists',
-  'run-app-bower'
+  'ensure-config-exists'
 ]);
 
 grunt.registerTask('ensure-config-exists', function() {
@@ -81,9 +80,6 @@ grunt.registerTask('ensure-config-exists', function() {
   popd();
 });
 
-grunt.registerTask('run-app-bower', function() {
-  exec("bower install");
-});
 
 grunt.registerTask('cljsbuild-prod', function() {
   grunt.log.writeln("\nCleaning and building ClojureScript production files...");
@@ -102,8 +98,6 @@ grunt.registerTask('check-old', function() {
   exec("lein ancient :all", {silent:false});
   grunt.log.writeln("\nChecking npm dependencies");
   exec("npm outdated", {silent:false});
-  grunt.log.writeln("\nChecking bower dependencies");
-  exec("bower list", {silent:false});
 });
 
 //------------------------------------------------------------------------------

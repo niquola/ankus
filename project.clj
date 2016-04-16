@@ -8,13 +8,15 @@
 
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [cljsjs/react "15.0.1-0"]
+                 [cljsjs/react-with-addons "15.0.1-0"]
                  [cljsjs/nodejs-externs "1.0.4-1"]
                  [org.clojure/clojurescript "1.8.40"]
                  [org.clojure/core.async "0.2.374"]
                  [garden "1.3.2"]
                  [reagent "0.6.0-alpha" :exclusions [cljsjs/react]]
-                 [route-map "0.0.3"]
-                 [cljsjs/react-with-addons "15.0.1-0"]]
+                 [reagent-forms "0.5.22"]
+                 [reagent-utils "0.1.7"]
+                 [route-map "0.0.3"]]
 
   :node-dependencies [[pg "latest"]]
 
@@ -25,7 +27,8 @@
   :min-lein-version "2.5.3"
 
   :cljsbuild {:builds {:app {:source-paths ["src/cljs"]
-                             :compiler {:output-to     "app/js/p/app.js"
+                             :compiler {:main "pgtron.core"
+                                        :output-to     "app/js/p/app.js"
                                         :output-dir    "app/js/p/out"
                                         :asset-path    "js/p/out"
                                         :optimizations :none
@@ -37,11 +40,12 @@
   :figwheel {:css-dirs ["app/css"]}
 
   :profiles {:dev {:cljsbuild {:builds {:app {:compiler {:source-map true
-                                                         :main  "pgtron.dev"
+                                                         :main  "pgtron.core"
                                                          :verbose true}
                                               :figwheel {:on-jsload "pgtron.core/mount-root"}}}}
-                   :source-paths ["env/dev/cljs" "env/dev/clj"]
 
+
+                   :source-paths ["env/dev/cljs" "env/dev/clj"]
                    :repl-options  {:init-ns pgtron.dev :nrepl-middleware  [cemerick.piggieback/wrap-cljs-repl]}
 
                    :dependencies [[figwheel-sidecar "0.5.2"]

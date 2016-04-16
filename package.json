@@ -4,7 +4,8 @@
     "private": true,
     "dependencies": {
         "fs-extra": "0.26.5",
-        "pg": "latest"
+        "pg": "latest",
+        "pg-native": "latest"
     },
     "devDependencies": {
         "grunt": "0.4.5",
