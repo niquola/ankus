@@ -8,7 +8,7 @@
            :violet "#993DC7"
            :gray "gray"
            :light-gray "#A2A2A2"
-           :black "#222"
+           :black "#090909"
            :green "#7EB26D"
            :blue "#6ED0E0"
            :red "#E24D42"
@@ -56,5 +56,7 @@
                   :$text [1 1.5]
                   :$color [:white :bg-0]}
            [:a {:$color [:blue]}
-            [:&:hover {:$color [:blue]}]]]
+            [:&:hover {:$color [:blue]}]]
+           [:pre {:$color [:white :black]
+                  :border "none"}]]
           scroll-style]))

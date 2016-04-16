@@ -6,36 +6,36 @@
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style]]))
 
-(defn $index [{db :db}]
+(defn tables [db]
   (let [state (atom {})]
     (go
       (let [res (<! (pg/exec db "SELECT * FROM pg_tables"))]
         (swap! state assoc :items
                (group-by (fn [x] (.-schemaname x)) res))))
     (fn []
-      [l/layout {}
-       [:div#dbs
-        (style
-         [:#dbs
-          [:.db {:display "block"
-                 :$margin [0.2 0 0.2 2]
-                 :$color [:white :black]
-                 :$padding [0.25 1]
-                 :position "relative"
-                 :border-left "3px solid #77b300"}
-           [:.right {:position "absolute"
-                     :right 0 :top 0}]
-           [:h3 [:i {:$color [:gray]}]]
-           [:span {:display "inline-block"
-                   :$padding 0.5}]]])
+      [:div#tables
+       (style
+        [:#tables
+         [:.tbl {:display "block"
+                :$margin [0.2 0 0.2 2]
+                :$color [:white :black]
+                :$padding [0.25 1]}
+          [:h3 [:i {:$color [:gray]}]]
+          [:span {:display "inline-block"
+                  :$padding 0.5}]]])
 
-        [:h1 "Database: " db]
+       (for [[sch tbls] (:items @state)]
+         [:div {:key sch}
+          [:h4 sch]
+          (for [tbl tbls]
+            [:div.tbl {:key (.-tablename tbl)}
+             [:a {:href (str  "#/tbl/" (.-tablename tbl))}
+              (.-tablename tbl)]
+             [:span.right [:a {:href "#/users"} "@" (.-tableowner tbl)]]
+             [:pre (.stringify js/JSON tbl)]])])])))
 
-        (for [[sch tbls] (:items @state)]
-          [:div {:key sch}
-           [:h4 sch]
-           (for [db tbls]
-             [:div.db {:key (.-tablename db) :href (str  "#/db/" (.-tablename db))}
-              [:a {:href "#/"} [:h3 (.-tablename db)]]
-              [:span.right [:a {:href "#/"} "@" (.-tableowner db)]]
-              #_[:pre (.stringify js/JSON db)]])])]])))
+(defn $index [{db :db}]
+  [l/layout {:bread-crump [{:title (str "db: " db)}]}
+   [:div#database
+    (style [:#database {}])
+    [tables db]]])

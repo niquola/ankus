@@ -9,32 +9,21 @@
 (defn dbs [state]
   (fn []
     [:div#dbs
-     (style
-      [:#dbs
-       [:.db {:display "inline-block"
-              :$padding [1 3]
-              :vertical-align "top"
-              :$width 18 
-              :$height 7 
-              :$margin 0.5
-              :border-top "6px solid #77b300"
-              :$color [:white :bg-1]}
-        [:h2 {:$margin [0.5 0]}]
-        [:&.template {:border-top "6px solid #777"}]]])
      [:a.box {:href "#/new/database"}
       [icon :plus]
       [:h2 "create db"]]
      (for [db (:items @state)]
-       [:a.db {:key   (.-datname db)
+       [:a.box {:key   (.-datname db)
                :class (when (= true (.-datistemplate db)) "template")
-               :href  (str  "#/db/" (.-datname db))}
+                :href  (str  "#/db/" (.-datname db))}
         [:h2 (.-datname db)]
-        [:i (.-datctype db)]
+        [:p (.-datctype db)]
         #_(.stringify js/JSON db)])]))
 
 (def dash-styles
   (style
    [:#dash
+    {:$padding [0 1]}
     [:h3 {:$color [:txt-muted]}]
     [:.block {:$padding [1 3]
               :$color [:white :bg-1]}]
@@ -77,9 +66,6 @@
       [:div#dash
        dash-styles
 
-       (if-let [summary (first (:summary @state))]
-         [:p.text-muted (.-version summary)])
-
        [:h3 "Tools:"]
 
        [:a.box {:href "#/query"}
@@ -112,11 +98,14 @@
 
        [:h3 "Connections:"]
        (if-let [summary (first (:summary @state))]
-         [:div.block
-          (for [con (.-connections  summary)]
-            [:div {:key (str (.-datid con) (.-pid con))}
-             [:b (.-application_name con) ":" (.-client_addr con) "->"]
-             [:b " "(.-usename con)]
-             [:b "@" (.-datname con)]
-             [:span " [" (.-state con) ": " (.-query_start con) "]"]
-             [:p.text-muted "   " (.-query con)]])])]])))
+         [:div
+          [:div.block
+           (for [con (.-connections  summary)]
+             [:div {:key (str (.-datid con) (.-pid con))}
+              [:b (.-application_name con) ":" (.-client_addr con) "->"]
+              [:b " "(.-usename con)]
+              [:b "@" (.-datname con)]
+              [:span " [" (.-state con) ": " (.-query_start con) "]"]
+              [:p.text-muted "   " (.-query con)]])]
+          [:br]
+          [:p.text-muted (.-version summary)]])]])))

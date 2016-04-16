@@ -7,22 +7,26 @@
 (node/enable-util-print!)
 
 (def pg (node/require "pg"))
+(def Client (.-Client pg))
 
 (def conn "postgres://crudtest:crudtest@localhost/")
 
 (defn exec [db sql]
-  (let [ch (async/chan)]
-    (.connect pg (str conn db)
-              (fn [err cl done]
-                (when err (.error js/console err))
-                (when (not err)
-                  #_(.log js/console sql)
-                  (.query cl sql nil
-                          (fn [err res]
-                            (if err
-                              (.error js/console err)
-                              (async/put! ch (.-rows res))))))))
-    ch))
+  (let [ch (async/chan)
+        cl (Client. (str conn db))]
+        (.connect
+         cl
+         (fn [err]
+           (when err (.log js/console "Error" err))
+           (when (not err)
+             (.log js/console sql)
+             (.query cl sql
+                     (fn [err res]
+                       (if err
+                         (.error js/console err)
+                         (async/put! ch (.-rows res)))
+                       (.end cl))))))
+        ch))
 
 (defn query-assoc [db sql state path proc]
   (go

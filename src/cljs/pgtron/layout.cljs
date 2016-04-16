@@ -5,14 +5,20 @@
 (defn navigation [glob]
   [:div#nav
    (style [:#nav
-           {:border-bottom "1px solid #262626"
-            :$color [:gray :bg-1]}
-           [:.brand {:$margin [0 1]}]
+           {:$color [:gray :bg-0]}
+           [:.brand {:$margin 0.5
+                     :display "inline-block"
+                     :padding "10px 16px"
+                     :$color [:green :black]
+                     :text-align "center"
+                     :border-radius "50%"}
+            [:.fa {:$text 1.5}]]
            [:.item {:display "inline-block"
                     :$padding 1}]
            [:.logo {:$height 2.5}]])
 
-   [:a.brand {:href "#/"} [:img.logo {:src "img/logo.png"}]]
+   [:a.brand {:href "#/"}
+    [icon :database]]
    (for [x (or (:bread-crump glob) [])]
      [:a.item {:key (:title x)
                :href "#/"}

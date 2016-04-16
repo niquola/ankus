@@ -13,14 +13,13 @@
             [route-map.core :as rm])
   (:import goog.History))
 
-
 (def routes {:GET #'dash/$index
              "config" {:GET #'config/$index}
              "users" {:GET #'users/$index}
              "query" {:GET #'query/$index}
              "db" {[:db] {:GET #'db/$index}}})
 
-(defn not-found [path] [l/layout [:h1 (str "Page " path " not found")]])
+(defn not-found [path] [l/layout {} [:h1 (str "Page " path " not found")]])
 
 (defn dispatch [event]
   (if-let [m (rm/match [:GET (.-token event)] routes)]
@@ -28,10 +27,10 @@
           h   #(session/put! :current-page [(:match m) (:params m)])
           stack (reduce (fn [acc x] (x acc)) h (reverse mws))]
       (stack m))
-    (session/put! :current-page [#'not-found (.-token event)])))
+    (session/put! :current-page [not-found (.-token event)])))
 
 (defn hook-browser-navigation! []
-  (doto (History.)
+  (doto (History. false nil (.getElementById js/document "_hx"))
     (events/listen EventType/NAVIGATE dispatch) (.setEnabled true)))
 
 (defn current-page []

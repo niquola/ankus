@@ -4,16 +4,14 @@
             [pgtron.layout :as l]
             [pgtron.pg :as pg]
             [cljs.core.async :refer [>! <!]]
+            [chloroform.core :as form]
             [pgtron.style :refer [style icon]]))
 
 (defn $index [params]
   (let [state (atom {})
         handle (fn [ev]
-                 (when (and (.-ctrlKey ev)
-                            (= 13 (.-which ev)))
-                   (.log js/console (.. ev -target -value) ev)
-                   (pg/query-assoc "postgres"
-                                   (.. ev -target -value)
+                 (let [sql (:sql @state)]
+                   (pg/query-assoc "postgres" sql
                                    state [:result]
                                    identity)))]
     (fn []
@@ -21,11 +19,15 @@
        [:div#query
         (style
          [:#query
-          [:textarea.form-control
+          [:textarea
            {:$color [:white :bg-0]
             :$padding 1
+            :$height 4
             :$text [1.1 1.5]}]])
-        [:textarea.form-control {:on-key-down handle}]
+        #_[:textarea.form-control {:on-key-down handle}]
+        [form/codemirror state [:sql] {:theme "railscasts"
+                                       :mode "text/x-sql"
+                                       :extraKeys {"Ctrl-Enter" handle}}]
         [:div.results
          (for [row (:result @state)]
            [:div {:key (gensym)}

@@ -23,13 +23,11 @@
 (defn set-value
   [editor value] (.setValue editor value))
 
-
 (defn get-range
   ([editor from to]
    (.getRange editor (clj->js from) (clj->js to)))
   ([editor from to sep]
    (.getRange editor (clj->js from) (clj->js to) sep)))
-
 
 (defn replace-range
   ([editor string from]
@@ -87,18 +85,14 @@
   [editor]
   (.isClean editor))
 
-
-                                        ; Cursor and selection methods
 (defn get-selection
   [editor]
   (.getSelection editor))
 
-                                        ; -
 (defn replace-selection
   [editor replacement]
   (.replaceSelection editor replacement))
 
-                                        ; - make it return a cljs obj
 (defn get-cursor
   [editor]
   (.getCursor editor))
@@ -129,14 +123,9 @@
   [editor]
   (.hasFocus editor))
 
-(defn find-pos-h
-  [])
+(defn find-pos-h [])
 
-(defn find-pos-v
-  [])
-
-
-                                        ; Configuration methods
+(defn find-pos-v [])
 
 (defn set-option
   [editor option value]
@@ -146,74 +135,41 @@
   [editor option]
   (.getOption editor option))
 
-(defn add-key-map
-  [])
+(defn add-key-map [])
 
-(defn remove-key-map
-  [])
+(defn remove-key-map [])
 
-(defn add-overlay
-  [])
+(defn add-overlay [])
 
-(defn remove-overlay
-  [])
+(defn remove-overlay [])
 
-(defn on
-  [])
+(defn on [])
 
-(defn off
-  [])
+(defn off [])
 
+(defn get-doc [editor] (.getDoc editor))
 
+(defn get-editor [doc] (.getEditor doc))
 
-                                        ; Document management methods
+(defn swap-doc [editor doc] (.swapDoc editor doc))
 
-(defn get-doc
-  [editor]
-  (.getDoc editor))
+(defn copy [doc] (.copy doc))
 
-(defn get-editor
-  [doc]
-  (.getEditor doc))
+(defn linked-doc []) 
 
-(defn swap-doc
-  [editor doc]
-  (.swapDoc editor doc))
+(defn unlink-doc []) 
 
-(defn copy
-  [doc]
-  (.copy doc))
+(defn iter-linked-docs [])
 
-(defn linked-doc
-  [])
+(defn undo [editor] (.undo editor))
 
-(defn unlink-doc
-  [])
+(defn redo [editor] (.redo editor))
 
-(defn iter-linked-docs
-  [])
+(defn history-size [editor] (.historySize editor))
 
+(defn clear-history [editor] (.clearHistory editor))
 
-                                        ; History related methods
-(defn undo
-  [editor]
-  (.undo editor))
-
-(defn redo
-  [editor]
-  (.redo editor))
-
-(defn history-size
-  [editor]
-  (.historySize editor))
-
-(defn clear-history
-  [editor]
-  (.clearHistory editor))
-
-(defn get-history
-  [editor]
-  (.getHistory editor))
+(defn get-history [editor] (.getHistory editor))
 
 (defn set-history [])
 
