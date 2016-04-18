@@ -10,7 +10,7 @@
 (defn dbs [state]
   (fn []
     [:div#dbs
-     [chart/pie {:width 500 :height 500}
+     [chart/pie {:width 800 :height 500}
       (map (fn [x] {:label (.-datname x) :value (.-rawsize x)}) (:items @state))]
      [:a.box {:href "#/new/database"}
       [icon :plus]

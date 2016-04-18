@@ -14,6 +14,7 @@
      ON c.relname = t.tablename
   JOIN pg_namespace n
     ON n.oid = c.relnamespace AND t.schemaname = n.nspname
+  WHERE t.schemaname NOT IN ('information_schema', 'pg_catalog')
   ")
 
 (defn extensions [db]
@@ -22,24 +23,38 @@
       (let [res (<! (pg/exec db "SELECT * FROM pg_extension"))]
         (swap! state assoc :items res)))
     (fn []
-      [:div#tables
-       (style
-        [:#tables
-         [:.tbl {:display "inline-block"
-                 :$width 25
-                 ;;:$height 5
-                 :vertical-align "top"
-                 :$margin 0.5
-                :$color [:gray :bg-1]
-                :$padding 1}
-          [:h3 {:$color [:gray]
-                :$text [1.2 1.5 :center]}]]])
+      [:div#extensions
        [:h4 "Extesions"]
        [:div.section
         (for [tbl (:items @state)]
-          [:div.tbl {:key (.stringify js/JSON tbl nil " ")}
+          [:div.box {:key (.stringify js/JSON tbl nil " ")}
            [:h3 (.-extname tbl) " " (.-extversion tbl)]
            #_[:pre (.stringify js/JSON tbl nil " ")]])]])))
+
+(def schema-sql "
+  select
+   schema_name,
+   (SELECT count(*) FROM pg_tables t WHERE t.schemaname = schema_name) AS tables_count,
+   (select count(*) from information_schema.views v WHERE v.table_schema = schema_name) AS views_count
+   FROM information_schema.schemata
+   ORDER BY schema_name
+  ")
+
+(defn schemas [db]
+  (let [state (atom {})]
+    (go (let [res (<! (pg/exec db schema-sql))]
+        (swap! state assoc :items res)))
+    (fn []
+      [:div#schemas
+       [:h4 "Schemata"]
+       [:div.section
+        (for [tbl (:items @state)]
+          [:a.box {:key (.stringify js/JSON tbl nil " ") :href (str "/dbs/" db "/schema/" (.-schema_name tbl))}
+           [:h3 (.-schema_name tbl)]
+           [:div.details
+            [:span (.-tables_count tbl) " tables; "]
+            [:span (.-views_count tbl) " views; "]
+            ]])]])))
 
 (defn tables [db]
   (let [state (atom {})]
@@ -56,7 +71,6 @@
         [:#tables
          [:.tbl {:display "inline-block"
                  :$width 25
-                 ;;:$height 5
                  :vertical-align "top"
                  :$margin 0.5
                 :$color [:gray :bg-1]
@@ -65,7 +79,7 @@
           [:.label {:$text [1 1.2 300 :center]
                     :$color :light-gray
                     :display "block"}]
-          [:.details {:$text 0.8
+          [:.details {:$text [0.8 1 :center]
                       :$padding 0.5}]]])
 
        (for [[sch tbls] (:items @state)]
@@ -85,6 +99,16 @@
   [l/layout {:bread-crump [{:title (str "db: " db)}]}
    [:div#database
     (style [:#database
-            [:.section {:$margin [0 0 0 2]}]])
+            [:.section {:$margin [0 0 0 2]}]
+            [:.box {:display "inline-block"
+                    :$width 25
+                    :vertical-align "top"
+                    :$margin 0.5
+                    :$color [:gray :bg-1]
+                    :$padding [0.5 1]}
+             [:.details {:$text [0.8 1 :center] :$padding 0.5}]
+             [:h3 {:$color :light-gray
+                   :$text [1 1.2 :center]}]]])
     [extensions db]
+    [schemas db]
     [tables db]]])
