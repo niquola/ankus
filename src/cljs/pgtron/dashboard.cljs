@@ -17,7 +17,7 @@
                :class (when (= true (.-datistemplate db)) "template")
                 :href  (str  "#/db/" (.-datname db))}
         [:h2 (.-datname db)]
-        [:p (.-datctype db)]
+        [:p.details.text-muted (.-size db)]
         #_(.stringify js/JSON db)])]))
 
 (def dash-styles
@@ -27,6 +27,7 @@
     [:h3 {:$color [:txt-muted]}]
     [:.block {:$padding [1 3]
               :$color [:white :bg-1]}]
+    [:.section {:$margin [0 0 2 2]}]
     [:.box {:display "inline-block"
             :$padding [1 3]
             :vertical-align "top"
@@ -41,11 +42,12 @@
       [:.fa {:$color :white}]
       [:h2 {:$color :white}]]
      [:.fa {:$text [3 3 :center]
-            :$color :gray
+            :$color :light-gray
             :display "block"}]
      [:h2 {:$text [1 1.5 :center]
-           :$color :gray
+           :$color :light-gray
            :$margin [0.5 0]}]
+     [:.details {:$text [0.8 1 :center]}]
      [:&.template {:border-top "6px solid #777"}]]]))
 
 
@@ -58,7 +60,7 @@
   (let [state (atom {})]
     (pg/query-assoc "postgres" summary-q state [:summary] identity)
     (pg/query-assoc "postgres"
-                    "SELECT * FROM pg_database"
+                    "SELECT *, pg_size_pretty(pg_database_size(datname)) as size FROM pg_database"
                     state [:items]
                     identity)
     (fn []
@@ -67,45 +69,47 @@
        dash-styles
 
        [:h3 "Tools:"]
+       [:div.section
+        [:a.box {:href "#/query"}
+         [icon :search]
+         [:h2 "Queries"]]
 
-       [:a.box {:href "#/query"}
-        [icon :search]
-        [:h2 "Queries"]]
+        [:a.box {:href "#/config"}
+         [icon :gear]
+         [:h2 "Configuration"]]
 
-       [:a.box {:href "#/config"}
-        [icon :gear]
-        [:h2 "Configuration"]]
+        [:a.box {:href "#/users"}
+         [icon :users]
+         [:h2 "Users"]]
 
-       [:a.box {:href "#/users"}
-        [icon :users]
-        [:h2 "Users"]]
+        [:a.box {:href "#/backups"}
+         [icon :floppy-o]
+         [:h2 "Backups"]]
 
-       [:a.box {:href "#/backups"}
-        [icon :floppy-o]
-        [:h2 "Backups"]]
+        [:a.box {:href "#/monitoring"}
+         [icon :bar-chart]
+         [:h2 "System"]]
 
-       [:a.box {:href "#/monitoring"}
-        [icon :bar-chart]
-        [:h2 "System"]]
+        [:a.box {:href "#/logs"}
+         [icon :list]
+         [:h2 "Logs"]]]
 
-       [:a.box {:href "#/logs"}
-        [icon :list]
-        [:h2 "Logs"]]
 
 
        [:h3 "Databases:"]
-       [dbs state]
+       [:div.section [dbs state]]
 
        [:h3 "Connections:"]
-       (if-let [summary (first (:summary @state))]
-         [:div
-          [:div.block
-           (for [con (.-connections  summary)]
-             [:div {:key (str (.-datid con) (.-pid con))}
-              [:b (.-application_name con) ":" (.-client_addr con) "->"]
-              [:b " "(.-usename con)]
-              [:b "@" (.-datname con)]
-              [:span " [" (.-state con) ": " (.-query_start con) "]"]
-              [:p.text-muted "   " (.-query con)]])]
-          [:br]
-          [:p.text-muted (.-version summary)]])]])))
+       [:div.section
+        (if-let [summary (first (:summary @state))]
+          [:div
+           [:div.block
+            (for [con (.-connections  summary)]
+              [:div {:key (str (.-datid con) (.-pid con))}
+               [:b (.-application_name con) ":" (.-client_addr con) "->"]
+               [:b " "(.-usename con)]
+               [:b "@" (.-datname con)]
+               [:span " [" (.-state con) ": " (.-query_start con) "]"]
+               [:p.text-muted "   " (.-query con)]])]
+           [:br]
+           [:p.text-muted (.-version summary)]])]]])))

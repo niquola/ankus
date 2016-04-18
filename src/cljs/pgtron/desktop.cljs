@@ -10,6 +10,7 @@
             [pgtron.config :as config]
             [pgtron.users :as users]
             [pgtron.query :as query]
+            [pgtron.table :as table]
             [route-map.core :as rm])
   (:import goog.History))
 
@@ -17,7 +18,8 @@
              "config" {:GET #'config/$index}
              "users" {:GET #'users/$index}
              "query" {:GET #'query/$index}
-             "db" {[:db] {:GET #'db/$index}}})
+             "db" {[:db] {:GET #'db/$index
+                          "tbl" {[:tbl] {:GET #'table/$index}}}}})
 
 (defn not-found [path] [l/layout {} [:h1 (str "Page " path " not found")]])
 
