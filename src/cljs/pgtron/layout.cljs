@@ -5,14 +5,14 @@
 (defn navigation [glob]
   [:div#nav
    (style [:#nav
-           {:$color [:gray :bg-0]}
+           {:$color [:gray :bg-1]}
            [:.brand {:$margin 0.5
                      :display "inline-block"
                      :padding "10px 16px"
                      :$color [:green :black]
                      :text-align "center"
                      :border-radius "50%"}
-            [:.fa {:$text 1.5}]]
+            [:.fa {:$text 1.3}]]
            [:.item {:display "inline-block"
                     :$padding 1}]
            [:.logo {:$height 2.5}]])

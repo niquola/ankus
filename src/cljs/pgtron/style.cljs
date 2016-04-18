@@ -1,23 +1,31 @@
 (ns pgtron.style
   (:require [gardner.core :as css]))
 
-
 (css/config
  {:colors {:white "white"
-           :bg-0 "#161616"
            :violet "#993DC7"
            :gray "gray"
            :light-gray "#A2A2A2"
+
            :black "#090909"
            :green "#7EB26D"
            :blue "#6ED0E0"
            :red "#E24D42"
+
            :txt-gold "#a47e3c"
+           :txt-gray "#adafae"
            :txt-muted "#555"
+
            :gold "#262626"
+
            :brd-blue "#33b5e5"
+           :brd-gray "#262626"
+
            :orange "#EAB839"
-           :bg-1 "#262626"}
+
+           :bg-0 "#161616"
+           :bg-1 "#1F1F1F"
+           :bg-2 "#262626"}
   :vars {:h 10
          :v 18}})
 

@@ -3,20 +3,24 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [pgtron.layout :as l]
             [pgtron.pg :as pg]
+            [charty.core :as chart]
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style icon]]))
 
 (defn dbs [state]
   (fn []
     [:div#dbs
+     [chart/pie {:width 500 :height 500}
+      (map (fn [x] {:label (.-datname x) :value (.-rawsize x)}) (:items @state))]
      [:a.box {:href "#/new/database"}
       [icon :plus]
       [:h2 "create db"]]
      (for [db (:items @state)]
        [:a.box {:key   (.-datname db)
-               :class (when (= true (.-datistemplate db)) "template")
+                :class (when (= true (.-datistemplate db)) "template")
                 :href  (str  "#/db/" (.-datname db))}
         [:h2 (.-datname db)]
+        [:p.details.text-muted (.-rawsize db)]
         [:p.details.text-muted (.-size db)]
         #_(.stringify js/JSON db)])]))
 
@@ -60,7 +64,10 @@
   (let [state (atom {})]
     (pg/query-assoc "postgres" summary-q state [:summary] identity)
     (pg/query-assoc "postgres"
-                    "SELECT *, pg_size_pretty(pg_database_size(datname)) as size FROM pg_database"
+                    "SELECT *,
+                    pg_size_pretty(pg_database_size(datname)) as size,
+                    pg_database_size(datname) as rawsize
+                    FROM pg_database"
                     state [:items]
                     identity)
     (fn []
