@@ -1,5 +1,6 @@
 (ns pgtron.layout
   (:require [gardner.core :as css]
+            [pgtron.state :as state]
             [pgtron.style :refer [style icon] :as st]))
 
 (defn navigation [glob]
@@ -15,14 +16,18 @@
             [:.fa {:$text 1.3}]]
            [:.item {:display "inline-block"
                     :$padding 1}]
+           [:.signout {:float "right"}]
            [:.logo {:$height 2.5}]])
 
-   [:a.brand {:href "#/"}
+   [:a.brand {:href "#/dashboard"}
     [icon :database]]
+   [:span.text-muted (:connection-string @state/state)]
    (for [x (or (:bread-crump glob) [])]
      [:a.item {:key (:title x)
                :href "#/"}
-      (when-let [ic (:icon x)] (icon ic)) " " (:title x)])])
+      (when-let [ic (:icon x)] (icon ic)) " " (:title x)])
+   [:a.item.signout {:href "#/"} "Sign Out"]
+   ])
 
 (defn footer []
   [:div#footer
@@ -35,7 +40,8 @@
 (defn layout [glob cnt]
   [:div#layout
    (st/main-style)
-   [navigation glob]
+   (when-not (:hide-menu glob)
+     [navigation glob])
    (style [:#center {:$padding 1}])
    [:div#center cnt]])
 

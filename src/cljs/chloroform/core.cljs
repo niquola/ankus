@@ -293,8 +293,8 @@
                                                  (:submit @doc)))
                                     " error"))}
 
-     [mk-input doc attrs]
      [:label {:for (str/join "_" (map name (:name attrs))) } (or (:label attrs) (labelize (:name attrs)))]
+     [mk-input doc attrs]
 
      (when-not (contains? non-dashed-inputs (:as attrs)) [:div.dash])
 

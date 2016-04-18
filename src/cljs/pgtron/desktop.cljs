@@ -11,10 +11,12 @@
             [pgtron.users :as users]
             [pgtron.query :as query]
             [pgtron.table :as table]
+            [pgtron.signin :as signin]
             [route-map.core :as rm])
   (:import goog.History))
 
-(def routes {:GET #'dash/$index
+(def routes {:GET #'signin/$index 
+             "dashboard" {:GET #'dash/$index}
              "config" {:GET #'config/$index}
              "users" {:GET #'users/$index}
              "query" {:GET #'query/$index}
