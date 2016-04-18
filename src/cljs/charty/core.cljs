@@ -68,11 +68,8 @@
                                  (data (pie data) key))
 
                        _ (do
-                           (.. text (enter)
-                               (append "text")
-                               (attr "dy" ".35em")
-                               (text (fn [d] (.. d -data -label))))
-                           (..  text (transition) (duration 1000)
+                           (.. text (enter) (append "text") (attr "dy" ".35em") (text (fn [d] (.. d -data -label))))
+                           (.. text (transition) (duration 1000)
                                 (attrTween "transform"
                                            (interpol (fn [inter t]
                                                        (let [d2 (inter t)
