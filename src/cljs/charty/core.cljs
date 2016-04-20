@@ -30,15 +30,31 @@
 (defn g [svg cls]
   (.. svg (append "g") (attr "class" cls)))
 
+
+(comment
+  [:polyline
+   {:transition {:duration 1000
+                 :tween {:attr  {:points (interpolate fn)}
+                         :style {:text-anchor (interpol fn)}}}}]
+
+  [:path {:style {:fill #(fill (.-index %))
+                  :stroke #(fill (.-index %))}
+          :d #(arc inner outer)
+          :on {:mouse-over #(fade .1)
+               :mouse-out #(fade 1)}}])
+
+(def color
+  (.. (.-scale js/d3)
+      (ordinal)
+      (range  #js["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"])))
+
 (defn render-pie [{height :height width :width :as opts} data]
-  #_(.log js/console "render" (pr-str opts))
-  #_(.log js/console "data" data)
-  (let [svg (.. js/d3 (select "svg") (append "g"))
+  (let [svg     (.. js/d3 (select "svg") (append "g"))
         slices  (g svg "slices")
         labels  (g svg "labels")
-        slieces (g svg "lines")
+        lines   (g svg "lines")
 
-        radius (/ (min width height) 2.5)
+        radius (half (min width height))
 
         pie (.. (.pie (.-layout js/d3))
                 (sort nil)
@@ -51,22 +67,18 @@
 
         key (fn [x] (.. x -data -label))
 
-        color (.. (.-scale js/d3)
-                  (ordinal)
-                  (range  #js["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]))
-
         update (fn [data]
                  (doto (.. slices (selectAll "path.slice") (data (pie data) key))
                    (.. (enter)
                        (insert "path")
-                       (style "fill" (fn [d] (color (.. d -data -label))))
-                       (attr "class" "slice"))
+                       (attr "class" "slice")
+                       (style "fill" (fn [d] (color (.. d -data -label)))))
                    (.. (transition) (duration 1000)
                        (attrTween "d" (interpol (fn [inter t] (arc (inter t))))))
                    (.. (exit) (remove)))
-                 
+
                  (doto (.. labels (selectAll "text") (data (pie data) key))
-                   (.. (enter) (append "text") (attr "dy" ".35em") (text (fn [d] (.. d -data -label))))
+                   (.. (enter) (append "text") (attr "dy" ".35em") (text key))
                    (.. (transition) (duration 1000)
                        (attrTween "transform"
                                   (interpol (fn [inter t]
@@ -75,12 +87,10 @@
                                                 (aset pos 0 (* radius (if (lower-angle? d2) 1 -1)))
                                                 (str "translate(" pos ")")))))
 
-                       (styleTween "text-anchor"
-                                   (interpol (fn [inter t]
-                                               (if (lower-angle? (inter t)) "start" "end")))))
+                       (styleTween "text-anchor" (interpol (fn [inter t] (if (lower-angle? (inter t)) "start" "end")))))
                    (.. (exit) (remove)))
 
-                 (doto (.. svg (select ".lines") (selectAll "polyline") (data (pie data) key))
+                 (doto (.. lines (selectAll "polyline") (data (pie data) key))
                    (.. (enter) (append "polyline"))
                    (.. (transition) (duration 1000)
                        (attrTween "points"
@@ -96,7 +106,6 @@
     nil))
 
 (defn pie [opts data]
-  #_(.log js/console "pie" (pr-str opts) data)
   (r/create-class
    {:reagent-render (fn [] [:div
                             [:style " path.slice{ stroke-width:2px;} .labels text {fill: white;} polyline{opacity: .3; stroke: white; stroke-width: 2px; fill: none;} "]
