@@ -7,7 +7,6 @@
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style icon]]))
 
-
 (defn dbs [state]
   (fn []
     [:div#dbs
@@ -61,8 +60,6 @@
      [:.details {:$text [0.8 1 :center]}]
      [:&.template {:border-top "6px solid #777"}]]]))
 
-
-
 (defn tools []
   [:div
    [:a.box {:href "#/query"}
@@ -93,8 +90,7 @@
 (def dbs-sql "SELECT *,pg_size_pretty(pg_database_size(datname)) as size,
               pg_database_size(datname) as rawsize
               FROM pg_database
-              WHERE datistemplate = false
-  ")
+              WHERE datistemplate = false")
 
 (defn $index [params]
   (let [state (atom {})]
@@ -111,9 +107,9 @@
         [:div.col-md-5
          [:h4 "Connections " (count (:connections @state))]
          [:h4 "Databases " (count (:items @state))]]]
-       
+
        [:h3 "Tools"]
        [:div.section [tools]]
-       
+
        [:h3 "Databases:"]
        [:div.section [dbs state]]]])))

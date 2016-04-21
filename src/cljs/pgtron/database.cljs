@@ -3,7 +3,6 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [pgtron.layout :as l]
             [pgtron.pg :as pg]
-            [pgtron.data :as data]
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style]]))
 
@@ -32,7 +31,7 @@
 
 (defn extensions [db]
   (let [state (atom {})]
-    (data/sql db extensions-query state [:items])
+    (pg/query-assoc db extensions-query state [:items])
     (fn []
       [:div#extensions
        [:h4 "Extesions"]
@@ -44,7 +43,7 @@
 
 (defn schemas [db]
   (let [state (atom {})]
-    (data/sql db schema-sql state [:items])
+    (pg/query-assoc db schema-sql state [:items])
     (fn []
       [:div#schemas
        [:h4 "Schemata"]

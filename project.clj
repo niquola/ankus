@@ -33,20 +33,25 @@
                                         :asset-path    "js/p/out"
                                         :optimizations :none
                                         :pretty-print  true
+                                        ;; :externs ["assets/codemirror-externs.js"]
+                                        ;; :foreign-libs [{:file "assets/codemirror.min.js"
+                                        ;;                 :provides ["CodeMirror"]}]
                                         :cache-analysis true}}}}
 
   :clean-targets ^{:protect false} [:target-path "out" "app/js/p"]
 
-  :figwheel {:css-dirs ["app/css"]}
+  :repl-options  {:init-ns pgtron.dev
+                  :nrepl-middleware  [cemerick.piggieback/wrap-cljs-repl]}
+
+  :figwheel {:http-server-root "app"
+             :nrepl-middleware ["cemerick.piggieback/wrap-cljs-repl"]
+             :css-dirs         ["app/css"]}
 
   :profiles {:dev {:cljsbuild {:builds {:app {:compiler {:source-map true
                                                          :main  "pgtron.core"
                                                          :verbose true}
                                               :figwheel {:on-jsload "pgtron.core/mount-root"}}}}
-
-
                    :source-paths ["env/dev/cljs" "env/dev/clj"]
-                   :repl-options  {:init-ns pgtron.dev :nrepl-middleware  [cemerick.piggieback/wrap-cljs-repl]}
 
                    :dependencies [[figwheel-sidecar "0.5.2"]
                                   [com.cemerick/piggieback "0.2.1"]]

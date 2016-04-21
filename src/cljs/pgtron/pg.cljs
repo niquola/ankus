@@ -47,9 +47,10 @@
                        (.end cl))))))
         ch))
 
-(defn query-assoc [db sql state path proc]
-  (go
-    (let [res (<! (exec db sql))]
-      (swap! state assoc-in path (proc res)))))
+(defn query-assoc [db sql state path & [proc]]
+  (let [proc (or proc identity)]
+    (go
+      (let [res (<! (exec db sql))]
+        (swap! state assoc-in path (proc res))))))
 
 
