@@ -7,14 +7,17 @@
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style icon]]))
 
+
 (defn dbs [state]
   (fn []
     [:div#dbs
-     [chart/pie {:width 800 :height 500}
-      (map (fn [x] {:label (.-datname x) :value (.-rawsize x)}) (:items @state))]
-     [:a.box {:href "#/new/database"}
+     (style [:#dbs  [:.box.new {:$color :green}
+                     [:.fa {:$color :green}]
+                     ]])
+     [:a.box.new {:href "#/new/database"}
       [icon :plus]
       [:h2 "create db"]]
+
      (for [db (:items @state)]
        [:a.box {:key   (.-datname db)
                 :class (when (= true (.-datistemplate db)) "template")
@@ -23,6 +26,10 @@
         [:p.details.text-muted (.-rawsize db)]
         [:p.details.text-muted (.-size db)]
         #_(.stringify js/JSON db)])]))
+
+(defn pie [state]
+  [chart/pie {:width 400 :height 220}
+   (map (fn [x] {:label (.-datname x) :value (.-rawsize x)}) (:items @state))])
 
 (def dash-styles
   (style
@@ -55,68 +62,58 @@
      [:&.template {:border-top "6px solid #777"}]]]))
 
 
-(def summary-q "
-  SELECT version() as version,
-        (SELECT json_agg(x.*) FROM pg_stat_activity x) as connections
-")
+
+(defn tools []
+  [:div
+   [:a.box {:href "#/query"}
+    [icon :search]
+    [:h2 "Queries"]]
+
+   [:a.box {:href "#/config"}
+    [icon :gear]
+    [:h2 "Configuration"]]
+
+   [:a.box {:href "#/users"}
+    [icon :users]
+    [:h2 "Users"]]
+
+   [:a.box {:href "#/backups"}
+    [icon :floppy-o]
+    [:h2 "Backups"]]
+
+   [:a.box {:href "#/monitoring"}
+    [icon :bar-chart]
+    [:h2 "System"]]
+
+   [:a.box {:href "#/logs"}
+    [icon :list]
+    [:h2 "Logs"]]])
+
+(def connections-sql "SELECT * FROM pg_stat_activity")
+(def dbs-sql "SELECT *,pg_size_pretty(pg_database_size(datname)) as size,
+              pg_database_size(datname) as rawsize
+              FROM pg_database
+              WHERE datistemplate = false
+  ")
 
 (defn $index [params]
   (let [state (atom {})]
-    (pg/query-assoc "postgres" summary-q state [:summary] identity)
-    (pg/query-assoc "postgres"
-                    "SELECT *,
-                    pg_size_pretty(pg_database_size(datname)) as size,
-                    pg_database_size(datname) as rawsize
-                    FROM pg_database"
-                    state [:items]
-                    identity)
+    (pg/query-assoc "postgres" connections-sql state [:connections] identity)
+    (pg/query-assoc "postgres" dbs-sql state [:items] identity)
     (fn []
      [l/layout {}
       [:div#dash
        dash-styles
 
-       [:h3 "Tools:"]
-       [:div.section
-        [:a.box {:href "#/query"}
-         [icon :search]
-         [:h2 "Queries"]]
-
-        [:a.box {:href "#/config"}
-         [icon :gear]
-         [:h2 "Configuration"]]
-
-        [:a.box {:href "#/users"}
-         [icon :users]
-         [:h2 "Users"]]
-
-        [:a.box {:href "#/backups"}
-         [icon :floppy-o]
-         [:h2 "Backups"]]
-
-        [:a.box {:href "#/monitoring"}
-         [icon :bar-chart]
-         [:h2 "System"]]
-
-        [:a.box {:href "#/logs"}
-         [icon :list]
-         [:h2 "Logs"]]]
-
-
-
+       [:h3 "Summary"]
+       [:div.row
+        [:div.col-md-5 [pie state]]
+        [:div.col-md-5
+         [:h4 "Connections " (count (:connections @state))]
+         [:h4 "Databases " (count (:items @state))]]]
+       
+       [:h3 "Tools"]
+       [:div.section [tools]]
+       
        [:h3 "Databases:"]
-       [:div.section [dbs state]]
-
-       [:h3 "Connections:"]
-       [:div.section
-        (if-let [summary (first (:summary @state))]
-          [:div
-           [:div.block
-            (for [con (.-connections  summary)]
-              [:div {:key (str (.-datid con) (.-pid con))}
-               [:b (.-application_name con) ":" (.-client_addr con) "->"]
-               [:b " "(.-usename con)]
-               [:b "@" (.-datname con)]
-               [:span " [" (.-state con) ": " (.-query_start con) "]"]
-               [:p.text-muted "   " (.-query con)]])]
-           [:br]
-           [:p.text-muted (.-version summary)]])]]])))
+       [:div.section [dbs state]]]])))

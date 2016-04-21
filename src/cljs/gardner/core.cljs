@@ -44,7 +44,7 @@
                :right    (when r (u/px* h r))}})))
 
 (defn &c [x]
-  (or (get @colors x) (throw (Exception. (str "Do not know color " x " only " @colors)))))
+  (or (get @colors x) (throw (str "Do not know color " x " only " @colors))))
 
 (defn &v [x] (and x (u/px* (get @vars :v) x)))
 (defn &h [x] (and x (u/px* (get @vars :h) x)))
@@ -75,7 +75,7 @@
                (cond
                  (number? k) (assoc acc :font-weight k)
                  (get props k) (assoc acc (get props k) (name k))
-                 :else (throw (Exception. (str "Do not know " k)))))
+                 :else (throw (str "Do not know " k))))
              {:font-size (&v s) :line-height (&v l)} args))))
 
 (defn &border
@@ -98,6 +98,12 @@
 
 
 (defn $width ([w] {:width (&h w)}))
+
+(defn $top ([w] {:top (&v w)}))
+(defn $bottom ([w] {:bottom (&v w)}))
+(defn $left ([w] {:left (&h w)}))
+(defn $right ([w] {:right (&h w)}))
+
 (defn $height ([h] {:height (&v h)}))
 (defn $min-height ([h] {:min-height (&v h)}))
 (defn $min-width ([w] {:min-width (&h w)}))
@@ -164,6 +170,10 @@
     :$width $width
     :$fill $fill
     :$height $height
+    :$top $top
+    :$bottom $bottom
+    :$left $left
+    :$right $right
     :$min-height $min-height
     :$min-width $min-width
     :$max-height $max-height
@@ -322,7 +332,7 @@
   (prefix/autoprefix
     (garden/css (pre-process grdn))))
 
-(defn resolve-var [v] (if (var? v) (var-get v) v))
+(defn resolve-var [v] v)
 
 (defn config [{vs :vars cs :colors ms :macros :as opts}]
   #_(println "Configure " opts)

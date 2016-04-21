@@ -15,25 +15,26 @@
   (str "postgres://" (first (clojure.string/split s #"/")) "/"))
 
 (defn $index [params]
-  (let [form (form/form-cursor state [:auth] {})
+  (let [form (form/form-cursor state [:auth] {:connection-string "nicola:nicola@localhost:5432/postgres"})
         submit (fn [& args]
                  (let [cs (get-in @form [:data  :connection-string])]
                    (.log js/console "Connection string" cs)
                    (go
                      (let [conn (str "postgres://" cs)
                           _ (.log js/console "Connecting to " conn)
-                          res (<! (pg/raw-exec  conn "select 1"))]
+                          res (<! (pg/raw-exec conn "select version() as version"))]
                       (if (:error res)
                         {:errors {:connection-string ["Could not connect to server"]}}
                         (do
-                          (.log js/console "Connection OK")
-                          (swap! state/state assoc :connection-string (prepare-connection-string cs))
+                          (.log js/console "Connection OK" res)
+                          (swap! state/state merge {:pg-info (.-version (first res))
+                                                    :connection-string (prepare-connection-string cs)})
                           (state/redirect "/dashboard")))))))]
    (fn []
      [l/layout {:hide-menu true}
       [:div#signin
        (style [:#signin {:display ""
-                         :margin "25% auto"
+                         :margin "10% auto"
                          :$width 70
                          :$padding [1 2]
                          :$color [:light-gray :bg-1]}

@@ -3,8 +3,12 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [pgtron.layout :as l]
             [pgtron.pg :as pg]
+            [pgtron.data :as data]
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style]]))
+
+(def extensions-query
+  "SELECT * FROM pg_extension")
 
 (def tables-query "
   SELECT *
@@ -17,20 +21,6 @@
   WHERE t.schemaname NOT IN ('information_schema', 'pg_catalog')
   ")
 
-(defn extensions [db]
-  (let [state (atom {})]
-    (go
-      (let [res (<! (pg/exec db "SELECT * FROM pg_extension"))]
-        (swap! state assoc :items res)))
-    (fn []
-      [:div#extensions
-       [:h4 "Extesions"]
-       [:div.section
-        (for [tbl (:items @state)]
-          [:div.box {:key (.stringify js/JSON tbl nil " ")}
-           [:h3 (.-extname tbl) " " (.-extversion tbl)]
-           #_[:pre (.stringify js/JSON tbl nil " ")]])]])))
-
 (def schema-sql "
   select
    schema_name,
@@ -40,10 +30,21 @@
    ORDER BY schema_name
   ")
 
+(defn extensions [db]
+  (let [state (atom {})]
+    (data/sql db extensions-query state [:items])
+    (fn []
+      [:div#extensions
+       [:h4 "Extesions"]
+       [:div.section
+        (for [tbl (:items @state)]
+          [:div.box {:key (.stringify js/JSON tbl nil " ")}
+           [:h3 (.-extname tbl) " " (.-extversion tbl)]
+           #_[:pre (.stringify js/JSON tbl nil " ")]])]])))
+
 (defn schemas [db]
   (let [state (atom {})]
-    (go (let [res (<! (pg/exec db schema-sql))]
-        (swap! state assoc :items res)))
+    (data/sql db schema-sql state [:items])
     (fn []
       [:div#schemas
        [:h4 "Schemata"]
@@ -53,18 +54,19 @@
            [:h3 (.-schema_name tbl)]
            [:div.details
             [:span (.-tables_count tbl) " tables; "]
-            [:span (.-views_count tbl) " views; "]
-            ]])]])))
+            [:span (.-views_count tbl) " views; "]]])]])))
+
+(defn *tables [db state]
+  (go (let [res (<! (pg/exec db tables-query))]
+      (swap! state assoc :items
+             (->> res
+                  (group-by (fn [x] (.-schemaname x)))
+                  (map (fn [[k v]] [k (sort-by #(.-tablename %)  v)]))
+                  (into {}))))))
 
 (defn tables [db]
   (let [state (atom {})]
-    (go
-      (let [res (<! (pg/exec db tables-query))]
-        (swap! state assoc :items
-               (->> res
-                    (group-by (fn [x] (.-schemaname x)))
-                    (map (fn [[k v]] [k (sort-by #(.-tablename %)  v)]))
-                    (into {})))))
+    (*tables db state)
     (fn []
       [:div#tables
        (style
@@ -95,8 +97,8 @@
                (.-size tbl)]
               #_[:pre (.stringify js/JSON tbl nil " ")]])]])])))
 
-(defn $index [{db :db}]
-  [l/layout {:bread-crump [{:title (str "db: " db)}]}
+(defn $index [{db :db :as params}]
+  [l/layout {:bread-crump [{:title (str "db: " db) :params params}]}
    [:div#database
     (style [:#database
             [:.section {:$margin [0 0 0 2]}]
