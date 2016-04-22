@@ -22,7 +22,9 @@
             [:&:hover {:text-decoration "none";
                        :$color :white}]]
            [:.item {:display "inline-block"
-                    :$padding 1}]
+                    :$padding 1}
+            [:&:hover {:text-decoration "none"}]
+            [:&.current {:$color :light-gray}]]
            [:.signout {:float "right"}]
            [:.logo {:$height 2.5}]])
 
@@ -31,8 +33,7 @@
    (when-let [db (get-in glob [:params :db])]
      [:a.db {:href (str "#/db/" db)} db " "(icon :chevron-down)])
    (for [x (or (:bread-crump glob) [])]
-     [:a.item {:key (:title x)
-               :href (:href x)}
+     [:a.item {:key (:title x) :href (:href x) :class (when-not (:href x) "current")}
       (when-let [ic (:icon x)] (icon ic)) " " (:title x)])
    [:a.item.signout {:href "#/"} "Sign Out"]])
 

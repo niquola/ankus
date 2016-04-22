@@ -8,15 +8,22 @@
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style icon]]))
 
-(def tables-query " SELECT 1 ")
-
 (defn query-attrs [db tbl]
-  (str "SELECT *  FROM information_schema.columns c
-         JOIN pg_stats s
-           ON s.attname = c.column_name
-        WHERE c.table_name = '" tbl "'
-           AND s.tablename = c.table_name
-        ORDER BY ordinal_position"))
+  (str
+"SELECT
+a.attname as column_name,
+t.relname as table_name,
+tp.typname as type,
+s.stanullfrac AS null_frac,
+s.stawidth AS avg_width,
+s.stadistinct AS n_distinct
+FROM pg_attribute a
+JOIN pg_class t ON t.oid = a.attrelid
+JOIN pg_type tp  ON a.atttypid = tp.oid
+LEFT JOIN pg_statistic s ON s.starelid = a.attrelid AND s.staattnum = a.attnum
+WHERE NOT a.attisdropped
+AND NOT a.attislocal
+ AND t.relname = '" tbl "'"))
 
 (defn query-indices [db tbl]
   (str "select i.relname as index_name,
@@ -71,8 +78,7 @@ order by i.relname"))
                      :width "50em"
                      :$text [0.8]}
            [:b {:$color :orange}]]
-          [:td.num {:text-align "right"
-                    :$color :blue}]
+          [:td.num {:text-align "right" :$color :blue}]
           [:th {:$color :gray}]
           [:.type {:$color :green}]
           [:.attr {:display "block"
@@ -92,9 +98,9 @@ order by i.relname"))
            [:th "default"]]]
          [:tbody
           (for [attr (:items @state)]
-            [:tr {:key (.-attname attr)}
+            [:tr {:key (.-column_name attr)}
              [:td (.-column_name attr)]
-             [:td [:span.type (.-data_type attr)]]
+             [:td [:span.type (.-type attr)]]
              [:td.nulls
               (if (= "NO" (.-is_nullable attr))
                 [:span.text-muted "NOT NULL"]
@@ -150,7 +156,12 @@ order by i.relname"))
             (for [row (:data @state)]
               [:tr {:key (.stringify js/JSON row)}
                (for [k keys]
-                 [:td {:key k :title k} (.toString (aget row k))])])]])]])))
+                 [:td.value {:key k :title k}
+                  (let [value (.stringify js/JSON (aget row k) nil " ")]
+                    (if (< (.-length value) 100)
+                      value
+                      (str (.substring value 0 100) "...")))
+                  ])])]])]])))
 
 (defn $index [{db :db sch :schema tbl :table :as params}]
   [l/layout {:params params

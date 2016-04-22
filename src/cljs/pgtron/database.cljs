@@ -3,6 +3,7 @@
   (:require [reagent.core :as r :refer [atom]]
             [pgtron.layout :as l]
             [pgtron.pg :as pg]
+            [charty.core :as chart]
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style icon]]))
 
@@ -12,6 +13,7 @@
 (def tables-query "
   SELECT *
         , pg_size_pretty(pg_relation_size(c.oid)) AS size
+        , pg_relation_size(c.oid) as raw_size AS size
    FROM pg_tables t
    JOIN pg_class c
      ON c.relname = t.tablename
@@ -134,7 +136,10 @@
 
 (defn tables-sql [sch]
   (str 
-   " SELECT t.tablename as display, *, pg_size_pretty(pg_relation_size(c.oid)) AS size
+   " SELECT t.tablename as display
+    , *
+    , pg_size_pretty(pg_relation_size(c.oid)) AS size
+    , pg_relation_size(c.oid) as raw_size
    FROM pg_tables t
    JOIN pg_class c
      ON c.relname = t.tablename
@@ -211,7 +216,6 @@
                 [:.search [:input {:$text [1.1 2] :$padding 1}]]
                 [:.col {:display "inline-block"
                         :vertical-align "top"
-                        :-webkit-column-count 3
                         :$margin [0 1 1 0]}
                  [:&.table [:.fa {:$color :blue}]]
                  [:&.eye [:.fa {:$color :green}]]
@@ -229,6 +233,9 @@
          [:input.form-control {:placeholder "Search" :on-change handle}]]
         [:br]
         [:div#data
+         [chart/pie {:width 800 :height 200}
+          (map (fn [x] {:label (str (.-tablename x) " (" (.-size x) ")") :value (.-raw_size x)})
+               (take 5 (sort-by #(- (.-raw_size %)) (:tables @state))))]
          (schema-items "Tables" :table (:tables @state) #(href "table" (.-tablename %)))
          (schema-items "Views" :eye (:views @state) #(href "views" (.-tablename %)))
          (schema-items "Functions" :facebook (:procs @state) #(href "procs" (.-tablename %)))]]])))
