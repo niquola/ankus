@@ -1,7 +1,6 @@
 (ns charty.core
   (:require [reagent.core :as r]))
 
-
 (defn interpol [cb]
   (let [current (atom nil)]
     (fn [d]

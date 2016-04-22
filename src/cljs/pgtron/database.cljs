@@ -74,8 +74,8 @@
                  :$width 25
                  :vertical-align "top"
                  :$margin 0.5
-                :$color [:gray :bg-1]
-                :$padding 1}
+                 :$color [:gray :bg-1]
+                 :$padding 1}
           [:h3 [:i {:$color [:gray]}]]
           [:.label {:$text [1 1.2 300 :center]
                     :$color :light-gray
