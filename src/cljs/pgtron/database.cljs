@@ -26,6 +26,7 @@
    (SELECT count(*) FROM pg_tables t WHERE t.schemaname = schema_name) AS tables_count,
    (select count(*) from information_schema.views v WHERE v.table_schema = schema_name) AS views_count
    FROM information_schema.schemata
+   WHERE schema_name NOT IN ('pg_temp_1', 'pg_toast', 'pg_toast_temp_1')
    ORDER BY schema_name
   ")
 
@@ -203,7 +204,9 @@
       [l/layout {:params params :bread-crump [{:title [:span (icon :folder-o) " " sch]}]}
        [:div#schema
         (style [:#schema {:$padding [1 2]}
-                [:h3 {:margin [2 0 1] :color :gray}]
+                [:h3 {:margin [2 0] :$text [0.9 1.5 :bold]
+                      :color :gray
+                      :border-bottom "1px solid #555"}]
                 [:.hide {:display "none"}]
                 [:.search [:input {:$text [1.1 2] :$padding 1}]]
                 [:.col {:display "inline-block"
