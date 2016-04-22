@@ -16,7 +16,7 @@
       [l/layout {:bread-crump [{:title "Config" :icon :gear}]}
        [:div#config
         (style
-         [:#config
+         [:#config {:$padding [1 2]}
           [:.cat {:$margin [1 0]
                   :$text [1 2 600]
                   :border-bottom "1px solid #555"}]

@@ -25,7 +25,10 @@
              "query" {:GET #'query/$index}
              "new" #'create/routes
              "db" {[:db] {:GET #'db/$index
-                          "tbl" {[:tbl] {:GET #'table/$index}}}}})
+                          "schema" {[:schema] {:GET #'db/$schema
+                                               "table" {[:table] {:GET #'table/$index}}}}
+                          "tbl" {[:tbl] {:GET #'table/$index}}
+                          "new" #'create/routes}}})
 
 (defn not-found [path] [l/layout {} [:h1 (str "Page " path " not found")]])
 

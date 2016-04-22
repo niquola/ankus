@@ -42,7 +42,7 @@
      :background-color  "transparent"
      :border-top  "10px solid transparent" }]
    [(keyword "::-webkit-scrollbar:hover")
-    {:background-color "rgba(0, 0, 0, 0.5)"} ]
+    {:background-color "transparent"} ]
    [(keyword "::-webkit-scrollbar-thumb:horizontal")
     {:background "rgba(0,0,0,0.2)"
      :border-radius "100px"
@@ -52,13 +52,19 @@
    [(keyword "::-webkit-scrollbar-thumb:horizontal:active")
     { :-webkit-border-radius "100px"}]
    [(keyword "::-webkit-scrollbar-thumb:vertical")
-    {:background "#666" ;;"rgba(0,0,0,0.2)"
+    {:background "#666"
+     :border-radius "100px"
+     :background-clip "padding-box"
+     :border "2px solid transparent"
+     :min-height "10px" }]
+   [(keyword "::-webkit-scrollbar-thumb:vertical")
+    {:background "#444"
      :border-radius "100px"
      :background-clip "padding-box"
      :border "2px solid transparent"
      :min-height "10px" }]
    [(keyword "::-webkit-scrollbar-thumb:vertical:active")
-        { :-webkit-border-radius "100px"}]])
+    { :-webkit-border-radius "100px"}]])
 
 (defn main-style []
   (style [[:body {:font-family "\"Helvetica Neue\",Helvetica,Arial,sans-serif"

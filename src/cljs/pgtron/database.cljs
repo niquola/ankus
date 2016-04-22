@@ -1,10 +1,10 @@
 (ns pgtron.database
   (:require-macros [cljs.core.async.macros :as m :refer [go alt!]])
-  (:require [reagent.core :as reagent :refer [atom]]
+  (:require [reagent.core :as r :refer [atom]]
             [pgtron.layout :as l]
             [pgtron.pg :as pg]
             [cljs.core.async :refer [>! <!]]
-            [pgtron.style :refer [style]]))
+            [pgtron.style :refer [style icon]]))
 
 (def extensions-query
   "SELECT * FROM pg_extension")
@@ -36,6 +36,9 @@
       [:div#extensions
        [:h4 "Extesions"]
        [:div.section
+        [:div.box.new {:key "new"}
+         [:a {:href (str  "#/db/" db "/new/extension")}
+          [:h3 (icon :plus) "New extension"]]]
         (for [tbl (:items @state)]
           [:div.box {:key (.stringify js/JSON tbl nil " ")}
            [:h3 (.-extname tbl) " " (.-extversion tbl)]
@@ -48,8 +51,13 @@
       [:div#schemas
        [:h4 "Schemata"]
        [:div.section
+        [:div.box.new {:key "new"}
+         [:a {:href (str  "#/db/" db "/new/schema")}
+          [:h3 (icon :plus)]
+          [:div.details "Create Schema"]]]
         (for [tbl (:items @state)]
-          [:a.box {:key (.stringify js/JSON tbl nil " ") :href (str "/dbs/" db "/schema/" (.-schema_name tbl))}
+          [:a.box {:key (.stringify js/JSON tbl nil " ")
+                   :href (str "#/db/" db "/schema/" (.-schema_name tbl))}
            [:h3 (.-schema_name tbl)]
            [:div.details
             [:span (.-tables_count tbl) " tables; "]
@@ -97,19 +105,127 @@
               #_[:pre (.stringify js/JSON tbl nil " ")]])]])])))
 
 (defn $index [{db :db :as params}]
-  [l/layout {:bread-crump [{:title (str "db: " db) :params params}]}
+  [l/layout {:params params :bread-crump []}
    [:div#database
     (style [:#database
+            {:$padding [1 2]}
             [:.section {:$margin [0 0 0 2]}]
             [:.box {:display "inline-block"
+                    :border-top "6px solid #777"
                     :$width 25
                     :vertical-align "top"
                     :$margin 0.5
-                    :$color [:gray :bg-1]
+                    :$color [:light-gray :bg-1]
                     :$padding [0.5 1]}
+             [:&:hover {:text-decoration "none"
+                        :$color :white
+                        :border-top "6px solid white"}
+              [:h3 {:$color :white}]]
              [:.details {:$text [0.8 1 :center] :$padding 0.5}]
+             [:&.new [:h3 {:$color :blue}]]
              [:h3 {:$color :light-gray
-                   :$text [1 1.2 :center]}]]])
+                   :$text [1 1.2 :center]}
+              [:.fa {:$text [1.2 1.2 :bold] :$padding [0 1]}]
+              ]]])
     [extensions db]
     [schemas db]
     [tables db]]])
+
+(defn tables-sql [sch]
+  (str 
+   " SELECT t.tablename as display, *, pg_size_pretty(pg_relation_size(c.oid)) AS size
+   FROM pg_tables t
+   JOIN pg_class c
+     ON c.relname = t.tablename
+  JOIN pg_namespace n
+    ON n.oid = c.relnamespace AND t.schemaname = n.nspname
+  WHERE t.schemaname = '" sch "' ORDER BY t.tablename"))
+
+(defn views-sql [sch]
+  (str "SELECT table_name as display, *
+          FROM information_schema.views
+         WHERE table_schema = '" sch "' ORDER by table_name"))
+
+(defn procs-sql [sch q]
+  (if (and q (not= q ""))
+    (str
+     "SELECT proname::text as display, *
+     FROM pg_proc p
+     JOIN pg_namespace n
+       ON n.oid = p.pronamespace
+    WHERE n.nspname = '" sch "'
+     AND  proname ilike '%" q "%'
+   ORDER BY proname
+    LIMIT 300")
+    (str
+     "SELECT proname as display, *
+     FROM pg_proc p
+     JOIN pg_namespace n
+       ON n.oid = p.pronamespace
+    WHERE n.nspname = '" sch "'
+   ORDER BY proname
+    LIMIT 50")))
+
+(defn bind [state path]
+  (fn [ev]
+    (swap! state assoc-in path (.. ev -target -value))))
+
+(defn filter-str [q items]
+  (for [i items]
+    (do (aset i "hidden" (if (= q "") false (if (> (.indexOf (.-display i) q) -1) false true))) i)))
+
+(defn schema-items [title ic xs href]
+  (when (> (count (filter #(not (.-hidden %)) xs)) 0)
+    [:div
+     [:h3 title]
+     [:div.col {:class (name ic)}
+      (for [tbl xs]
+        [:a.item {:key (.-display tbl)
+                  :href (href tbl)
+                  :class (when (.-hidden tbl) "hide")}
+         [:span (icon ic) " " (.-display tbl)]])]]))
+
+(defn $schema [{db :db sch :schema :as params}]
+  (let [state (atom {:search "" :tables [] :views [] :procs []})
+        href (fn [tp id] (str "#/db/" db "/schema/" sch "/" tp "/" id))
+        handle (fn [ev]
+                 (let [q (.. ev -target -value)]
+                   (pg/query-assoc db (procs-sql sch q)  state [:procs])
+                   (swap! state
+                          (fn [old]
+                            (-> old
+                                (assoc :tables (filter-str q (:tables old)))
+                                (assoc :views (filter-str q (:views old))))))))]
+    (pg/query-assoc db (tables-sql sch) state [:tables])
+    (pg/query-assoc db (views-sql sch)  state [:views])
+    (pg/query-assoc db (procs-sql sch "")  state [:procs])
+    (fn []
+      [l/layout {:params params :bread-crump [{:title [:span (icon :folder-o) " " sch]}]}
+       [:div#schema
+        (style [:#schema {:$padding [1 2]}
+                [:h3 {:margin [2 0 1] :color :gray}]
+                [:.hide {:display "none"}]
+                [:.search [:input {:$text [1.1 2] :$padding 1}]]
+                [:.col {:display "inline-block"
+                        :vertical-align "top"
+                        :-webkit-column-count 3
+                        :$margin [0 1 1 0]}
+                 [:&.table [:.fa {:$color :blue}]]
+                 [:&.eye [:.fa {:$color :green}]]
+                 [:&.facebook [:.fa {:$color :orange}]]
+                 [:.item {:$padding [0.25 1]
+                          :display "inline-block"
+                          :$color :light-gray
+                          :cursor "pointer"
+                          :$text [1 1]
+                          :$width 40}
+                  [:&:hover {:$color [:white :black]
+                             :text-decoration "none"}]
+                  [:.fa {:$text [0.8 1]}]]]])
+        [:div.search
+         [:input.form-control {:placeholder "Search" :on-change handle}]]
+        [:br]
+        [:div#data
+         (schema-items "Tables" :table (:tables @state) #(href "table" (.-tablename %)))
+         (schema-items "Views" :eye (:views @state) #(href "views" (.-tablename %)))
+         (schema-items "Functions" :facebook (:procs @state) #(href "procs" (.-tablename %)))]]])))

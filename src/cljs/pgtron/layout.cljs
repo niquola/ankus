@@ -12,6 +12,15 @@
                      :$color :green
                      :$width 6}
             [:.fa {:$text [1.3 2]}]]
+           [:.db {:$text [1 2]
+                  :$padding [0.25 1]
+                  :$color [:light-gray :bg-0]
+                  :border-radius "3px"
+                  :cursor "pointer"
+                  :border "1px solid #333"}
+            [:.fa {:$text [0.8]}]
+            [:&:hover {:text-decoration "none";
+                       :$color :white}]]
            [:.item {:display "inline-block"
                     :$padding 1}]
            [:.signout {:float "right"}]
@@ -19,9 +28,11 @@
 
    [:a.brand {:href "#/dashboard"} [icon :database]]
 
+   (when-let [db (get-in glob [:params :db])]
+     [:a.db {:href (str "#/db/" db)} db " "(icon :chevron-down)])
    (for [x (or (:bread-crump glob) [])]
      [:a.item {:key (:title x)
-               :href "#/"}
+               :href (:href x)}
       (when-let [ic (:icon x)] (icon ic)) " " (:title x)])
    [:a.item.signout {:href "#/"} "Sign Out"]])
 
