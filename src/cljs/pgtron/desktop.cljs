@@ -13,6 +13,7 @@
             [pgtron.table :as table]
             [pgtron.signin :as signin]
             [pgtron.demo :as demo]
+            [pgtron.create :as create]
             [route-map.core :as rm])
   (:import goog.History))
 
@@ -22,6 +23,7 @@
              "config" {:GET #'config/$index}
              "users" {:GET #'users/$index}
              "query" {:GET #'query/$index}
+             "new" #'create/routes
              "db" {[:db] {:GET #'db/$index
                           "tbl" {[:tbl] {:GET #'table/$index}}}}})
 

@@ -43,7 +43,10 @@
              :top 0 :left 0 :right 0 :$height 3
              :box-shadow "0 1px 3px #090909, 0 1px 2px #111"
              :z-index 1000}]
-     [:#center {:position "absolute" :$padding [1 4 1 6] :$top 3 :left 0 :right 0 :$bottom 2 :overflow-x "auto"}]
+     [:#center {:position "absolute"
+                :$padding 0 ;;[1 4 1 6]
+                :$top 3 :left 0 :right 0 :$bottom 2
+                :overflow-x "auto"}]
      [:#footer {:position "absolute" :$height 2 :left 0 :right 0 :bottom 0}]])
    (when-not (:hide-menu glob)
      [navigation glob])

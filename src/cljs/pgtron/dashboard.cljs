@@ -11,8 +11,7 @@
   (fn []
     [:div#dbs
      (style [:#dbs  [:.box.new {:$color :green}
-                     [:.fa {:$color :green}]
-                     ]])
+                     [:.fa {:$color :green}]]])
      [:a.box.new {:href "#/new/database"}
       [icon :plus]
       [:h2 "create db"]]
@@ -22,7 +21,6 @@
                 :class (when (= true (.-datistemplate db)) "template")
                 :href  (str  "#/db/" (.-datname db))}
         [:h2 (.-datname db)]
-        [:p.details.text-muted (.-rawsize db)]
         [:p.details.text-muted (.-size db)]
         #_(.stringify js/JSON db)])]))
 
@@ -51,7 +49,7 @@
        :border-top "6px solid white"}
       [:.fa {:$color :white}]
       [:h2 {:$color :white}]]
-     [:.fa {:$text [3 3 :center]
+     [:.fa {:$text [2.5 2.5 :center]
             :$color :light-gray
             :display "block"}]
      [:h2 {:$text [1 1.5 :center]
@@ -92,6 +90,31 @@
               FROM pg_database
               WHERE datistemplate = false")
 
+(defn summary [state]
+  [:div#summary
+   (style
+    [:#summary
+     [:.card {:$color [:white :bg-1]
+              :$padding [1 2]
+              :$height 14
+              :$margin [0 1]}]
+     [:.pie {:$width 50 :display "inline-block"}]
+     [:.metrics {:$width 50 :display "inline-block"}]
+     [:.metric {:display "inline-block"
+                :$color :gray
+                :$margin [0 2 0 0]}
+      [:.value {:$color :orange
+                :margin 0
+                :$text [3 3 :center]}]]])
+   [:div.pie [pie state]]
+   [:div.metrics
+    [:div.metric
+     [:h3.value (count (:connections @state))]
+     [:p "Connections "]]
+    [:div.metric
+     [:h3.value (count (:items @state))]
+     [:p "Databases"]]]])
+
 (defn $index [params]
   (let [state (atom {})]
     (pg/query-assoc "postgres" connections-sql state [:connections] identity)
@@ -102,11 +125,7 @@
        dash-styles
 
        [:h3 "Summary"]
-       [:div.row
-        [:div.col-md-5 [pie state]]
-        [:div.col-md-5
-         [:h4 "Connections " (count (:connections @state))]
-         [:h4 "Databases " (count (:items @state))]]]
+       [:div.section [summary state]]
 
        [:h3 "Tools"]
        [:div.section [tools]]
