@@ -73,7 +73,7 @@
                                     stroke: #ddd;
                                     shape-rendering: crispEdges;
                                   }
-                                  .area-chart text { stroke: #ddd; }
+                                  .area-chart text { font-size: 12px; stroke-width: 0; fill: #ddd; }
                                   "]
                               [:svg.area-chart {:id id
                                      :width (:width opts)

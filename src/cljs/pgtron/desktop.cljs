@@ -25,6 +25,7 @@
              "query" {:GET #'query/$index}
              "new" #'create/routes
              "db" {[:db] {:GET #'db/$index
+                          "query" {:GET #'query/$index}
                           "schema" {[:schema] {:GET #'db/$schema
                                                "table" {[:table] {:GET #'table/$index}}}}
                           "tbl" {[:tbl] {:GET #'table/$index}}

@@ -9,11 +9,13 @@
             [pgtron.style :refer [style icon]]))
 
 (defn- pie? [x]
-  (.log js/console "PIE" (and x (.-pie_label x) (.-pie_value x) true) x)
   (and x (.-pie_label x) (.-pie_value x) true))
 
 (defn- chart? [x]
   (and x (.-area_x x) (.-area_y x) true))
+
+(defn- graph? [x]
+  (and x (.-graph_source_id x) (.-graph_target_id x)))
 
 (def examples [{:title "Pie Chart"
                 :sql "SELECT pg_relation_size(c.oid) AS pie_value,
@@ -28,18 +30,26 @@
                 }
                {:title "Area Chart"
                 :sql "SELECT x area_x, random() * 0.1 + sin(x / 5) area_y
- FROM generate_series(1,100) x"}])
+ FROM generate_series(1,100) x"}
+
+               {:title "Graph Chart"
+                :sql "
+SELECT tc.table_name as graph_source_id,
+   ccu.table_name AS graph_target_id
+FROM
+information_schema.table_constraints AS tc
+JOIN information_schema.key_column_usage AS kcu
+  ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage AS ccu
+  ON ccu.constraint_name = tc.constraint_name
+WHERE constraint_type = 'FOREIGN KEY'"}])
 
 
-(defn $index [params]
+(defn $index [{db :db :as params}]
   (let [state (atom {:sql (:sql (first examples))})
-        handle (fn [ev]
-                 (let [sql (:sql @state)]
-                   (pg/query-assoc "postgres" sql
-                                   state [:result]
-                                   identity)))]
+        handle (fn [ev] (pg/query-assoc (or db "postgres") (:sql @state) state [:result] identity))]
     (fn []
-      [l/layout {:bread-crump [{:title "Query" :icon :search}]}
+      [l/layout {:params params :bread-crump [{:title "Query" :icon :search}]}
        [:div#query
         (style
          [:#query
@@ -66,9 +76,14 @@
              (pie? fst) [:div
                          [:h3 "Pie Chart:"]
                          [chart/pie {:width 1000 :height 600} (map (fn [x] {:label (.-pie_label x) :value (.-pie_value x)}) rows)]]
+
+             (graph? fst) [:div
+                           [:h3 "Graph Chart:"]
+                           [chart/force-graph {:width 1000 :height 600} rows]]
+
              (chart? fst) [:div
                            [:h3 "Area Chart:"]
-                           [chart/area-chart {:width 1000 :height 600}
+                           [chart/area-chart {:width 1000 :height 400}
                             (map (fn [d] {:x (.-area_x d) :y (.-area_y d)}) rows)]])
            (for [row rows]
              [:div {:key (gensym)}

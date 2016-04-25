@@ -6,7 +6,7 @@
             [pgtron.style :refer [style]]))
 
 
-(defn $index [params]
+#_(defn $index [params]
   (let [state (r/atom {:inc 1 :items []})
         handle (fn []
           (let [cur @state]
@@ -24,21 +24,16 @@
         [:h1 "Chart"]
         [chart/area-chart {:width 800 :height 300} (:items @state)]]])))
 
-#_(defn $index [params]
-  (let [state (r/atom {:inc 1 :items []})
-        handle (fn []
-                 (let [cur @state]
-                   (reset! state {:items (reduce (fn [acc i]
-                                                   (.. acc (push #js{:x i :y (.sin js/Math (+ (rand) (/ i 5)))}))
-                                                   acc) #js[] (range 100))})))]
+(def data
+  #js[#js{:graph_source_id "node1" :graph_target_id "node2"}
+      #js{:graph_source_id "node2" :graph_target_id "node2"}
+      #js{:graph_source_id "node3" :graph_target_id "node2"}
+      #js{:graph_source_id "node4" :graph_target_id "node4"}])
+
+(defn $index [params]
+  (let [state (r/atom {:inc 1 :items []})]
     (fn []
       [l/layout {}
-       [:div
-        [:button {:on-click handle} "Update"]
-        (style [:svg [:circle {:fill "#fff"}]
-                [:text {:fill "yellow"}]])
-        [:pre (pr-str @state)]
-        [:h1 "Chart"]
-        [dsl/demo {:width 800 :height 400} #js[1 2 3 4]]
+       [:div [:h1 "Graph"]
+        [chart/force-graph {:width 800 :height 800} data]]])))
 
-        ]])))

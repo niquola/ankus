@@ -128,8 +128,35 @@
              [:&.new [:h3 {:$color :blue}]]
              [:h3 {:$color :light-gray
                    :$text [1 1.2 :center]}
-              [:.fa {:$text [1.2 1.2 :bold] :$padding [0 1]}]
-              ]]])
+              [:.fa {:$text [1.2 1.2 :bold] :$padding [0 1]}]]]
+
+            [:.tbox {:display "inline-block"
+                    :$padding [1 3]
+                    :vertical-align "top"
+                    :$width 18 
+                    :$height 7 
+                    :$margin 0.5
+                    :border-top "6px solid #777"
+                    :$color [:white :bg-1]}
+             [:&:hover
+              {:text-decoration "none"
+               :border-top "6px solid white"}
+              [:.fa {:$color :white}]
+              [:h2 {:$color :white}]]
+             [:.fa {:$text [2.5 2.5 :center]
+                    :$color :light-gray
+                    :display "block"}]
+             [:h2 {:$text [1 1.5 :center]
+                   :$color :light-gray
+                   :$margin [0.5 0]}]
+             [:.details {:$text [0.8 1 :center]}]
+             [:&.template {:border-top "6px solid #777"}]]])
+
+    [:div.section
+     [:a.tbox {:href (str "#/db/" db "/query")}
+      [icon :search]
+      [:h2 "Queries"]]]
+
     [extensions db]
     [schemas db]
     [tables db]]])
