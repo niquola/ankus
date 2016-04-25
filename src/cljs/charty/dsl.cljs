@@ -58,7 +58,9 @@
 (def demo
   (mk-svg-component
    (fn [svg opts data]
-     (let [cicles (-> svg (.selectAll "circle") (.data data identity))
+     (let [cicles (-> svg
+                      (.selectAll "circle")
+                      (.data data identity))
            enter (.enter cicles)]
        (->  enter
         (append [:circle {:transition  {:cx #(* 100 %)
