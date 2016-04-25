@@ -68,5 +68,4 @@
                                                                 :closure-defines {"goog.DEBUG" false}
                                                                 :externs ["externs/misc.js"]
                                                                 :pretty-print false}
-                                                     :source-paths ["env/prod/cljs"]}}}}}
-  )
+                                                     :source-paths ["env/prod/cljs"]}}}}})

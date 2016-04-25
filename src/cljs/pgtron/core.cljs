@@ -2,7 +2,6 @@
   (:require [figwheel.client :as figwheel :include-macros true]
             [pgtron.desktop :as d]))
 
-(.log js/console "here")
 (enable-console-print!)
 
 (figwheel/watch-and-reload

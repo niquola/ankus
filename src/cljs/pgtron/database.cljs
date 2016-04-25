@@ -3,6 +3,13 @@
   (:require [reagent.core :as r :refer [atom]]
             [pgtron.layout :as l]
             [pgtron.pg :as pg]
+
+            [pgtron.table :as table]
+            [pgtron.view :as view]
+            [pgtron.proc :as proc]
+            [pgtron.create :as create]
+            [pgtron.query :as query]
+
             [charty.core :as chart]
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style icon]]))
@@ -207,6 +214,7 @@
   (for [i items]
     (do (aset i "hidden" (if (= q "") false (if (> (.indexOf (.-display i) q) -1) false true))) i)))
 
+
 (defn schema-items [title ic xs href]
   (when (> (count (filter #(not (.-hidden %)) xs)) 0)
     [:div
@@ -263,6 +271,18 @@
          [chart/pie {:width 800 :height 200}
           (map (fn [x] {:label (str (.-tablename x) " (" (.-size x) ")") :value (.-raw_size x)})
                (take 5 (sort-by #(- (.-raw_size %)) (:tables @state))))]
-         (schema-items "Tables" :table (:tables @state) #(href "table" (.-tablename %)))
-         (schema-items "Views" :eye (:views @state) #(href "views" (.-tablename %)))
-         (schema-items "Functions" :facebook (:procs @state) #(href "procs" (.-tablename %)))]]])))
+         (schema-items "Tables" :table (:tables @state) #(href "table" (.-display %)))
+         (schema-items "Views" :eye (:views @state) #(href "view" (.-display %)))
+         (schema-items "Functions" :facebook (:procs @state) #(href "proc" (.-display %)))]]])))
+
+
+(def routes
+  {[:db] {:GET #'$index
+          "query" {:GET #'query/$index}
+          "schema" {[:schema] {:GET #'$schema
+                               "table" {[:table] {:GET #'table/$index}}
+                               "proc" {[:proc]   {:GET #'proc/$index}}
+                               "view" {[:view]   {:GET #'view/$index}}}}
+
+          "tbl" {[:tbl] {:GET #'table/$index}}
+          "new" #'create/routes}})

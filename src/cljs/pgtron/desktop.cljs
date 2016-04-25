@@ -15,21 +15,17 @@
             [pgtron.demo :as demo]
             [pgtron.create :as create]
             [route-map.core :as rm])
+
   (:import goog.History))
 
 (def routes {:GET #'signin/$index 
              "dashboard" {:GET #'dash/$index}
-             "demo" {:GET #'demo/$index}
+             "demo"  {:GET #'demo/$index}
              "config" {:GET #'config/$index}
              "users" {:GET #'users/$index}
              "query" {:GET #'query/$index}
-             "new" #'create/routes
-             "db" {[:db] {:GET #'db/$index
-                          "query" {:GET #'query/$index}
-                          "schema" {[:schema] {:GET #'db/$schema
-                                               "table" {[:table] {:GET #'table/$index}}}}
-                          "tbl" {[:tbl] {:GET #'table/$index}}
-                          "new" #'create/routes}}})
+             "new"   #'create/routes
+             "db"    #'db/routes})
 
 (defn not-found [path] [l/layout {} [:h1 (str "Page " path " not found")]])
 
