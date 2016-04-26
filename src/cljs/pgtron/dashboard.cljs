@@ -96,7 +96,7 @@
     [:#summary
      [:.card {:$color [:white :bg-1]
               :$padding [1 2]
-              :$height 14
+              :$height3 14
               :$margin [0 1]}]
      [:.pie {:$width 50 :display "inline-block"}]
      [:.metrics {:$width 50 :display "inline-block"}]

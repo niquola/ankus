@@ -8,6 +8,7 @@
              :$text [0.8]
              :vertical-align "top"
              :clear "both"
+             :float "left"
              :$margin [1 0]
              :$padding [1 2]}
      [:.columns {:$color [:white :bg-1]
