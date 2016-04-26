@@ -1,5 +1,25 @@
+# Ankus
 
-# pgtron
+Post-industrial UI for PostgreSQL.
+
+Here are some principles by design:
+
+* Hackable:  could be extended in a minutes
+* Educatable: should educate user about PostgreSQL internals
+  * embeded documentations (context sensitive)
+  * do not hide sql (code generators vs forms)
+  * interactive documentations
+* Visualize: 
+  * use graphic tools to visualize your database from schema to data
+  * pluggable graphs and visualizations
+* Best practices:
+  * embed postgresql best practices as small easy write plugins
+  * query advisers
+  * configuration advisers
+  * embeded monitoring
+* Monitoring:
+  * minimal required monitoring
+
 
 ## Requirements
 
