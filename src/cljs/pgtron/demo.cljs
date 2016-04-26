@@ -24,16 +24,27 @@
         [:h1 "Chart"]
         [chart/area-chart {:width 800 :height 300} (:items @state)]]])))
 
-(def data
+#_(def data
   #js[#js{:graph_source_id "node1" :graph_target_id "node2"}
       #js{:graph_source_id "node2" :graph_target_id "node2"}
       #js{:graph_source_id "node3" :graph_target_id "node2"}
       #js{:graph_source_id "node4" :graph_target_id "node4"}])
+
+#_(defn $index [params]
+  (let [state (r/atom {:inc 1 :items []})]
+    (fn []
+      [l/layout {}
+       [:div [:h1 "Graph"]
+        [chart/force-graph {:width 800 :height 800} data]]])))
+
+(def data
+  #js[#js{:label "one"}])
 
 (defn $index [params]
   (let [state (r/atom {:inc 1 :items []})]
     (fn []
       [l/layout {}
        [:div [:h1 "Graph"]
-        [chart/force-graph {:width 800 :height 800} data]]])))
+        [chart/sankey {:width 800 :height 800} data]]])))
+
 
