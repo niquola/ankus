@@ -45,6 +45,6 @@
     (fn []
       [l/layout {}
        [:div [:h1 "Graph"]
-        [chart/sankey {:width 800 :height 800} data]]])))
+        [chart/sankey {:width 800 :height 400} data]]])))
 
 

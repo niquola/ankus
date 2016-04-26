@@ -1,0 +1,725 @@
+{
+ "QUERY PLAN": [
+  {
+   "Plan": {
+    "Node Type": "Hash Join",
+    "Join Type": "Inner",
+    "Startup Cost": 673.92,
+    "Total Cost": 1121.85,
+    "Plan Rows": 574,
+    "Plan Width": 96,
+    "Hash Cond": "(((\"*SELECT* 1_1\".conname)::information_schema.sql_identifier)::text = (\"*SELECT* 1\".constraint_name)::text)",
+    "Plans": [
+     {
+      "Node Type": "Append",
+      "Parent Relationship": "Outer",
+      "Startup Cost": 36.77,
+      "Total Cost": 462.41,
+      "Plan Rows": 3021,
+      "Plan Width": 128,
+      "Plans": [
+       {
+        "Node Type": "Subquery Scan",
+        "Parent Relationship": "Member",
+        "Alias": "*SELECT* 1_1",
+        "Startup Cost": 36.77,
+        "Total Cost": 36.79,
+        "Plan Rows": 1,
+        "Plan Width": 128,
+        "Plans": [
+         {
+          "Node Type": "Aggregate",
+          "Strategy": "Hashed",
+          "Parent Relationship": "Subquery",
+          "Startup Cost": 36.77,
+          "Total Cost": 36.78,
+          "Plan Rows": 1,
+          "Plan Width": 324,
+          "Group Key": [
+           "nr.nspname",
+           "r.relname",
+           "r.relowner",
+           "a_1.attname",
+           "nc.nspname",
+           "c.conname"
+          ],
+          "Plans": [
+           {
+            "Node Type": "Nested Loop",
+            "Parent Relationship": "Outer",
+            "Join Type": "Inner",
+            "Startup Cost": 0.97,
+            "Total Cost": 36.75,
+            "Plan Rows": 1,
+            "Plan Width": 324,
+            "Join Filter": "(c.connamespace = nc.oid)",
+            "Plans": [
+             {
+              "Node Type": "Nested Loop",
+              "Parent Relationship": "Outer",
+              "Join Type": "Inner",
+              "Startup Cost": 0.97,
+              "Total Cost": 35.62,
+              "Plan Rows": 1,
+              "Plan Width": 264,
+              "Plans": [
+               {
+                "Node Type": "Nested Loop",
+                "Parent Relationship": "Outer",
+                "Join Type": "Inner",
+                "Startup Cost": 0.83,
+                "Total Cost": 34.96,
+                "Plan Rows": 1,
+                "Plan Width": 204,
+                "Plans": [
+                 {
+                  "Node Type": "Nested Loop",
+                  "Parent Relationship": "Outer",
+                  "Join Type": "Inner",
+                  "Startup Cost": 0.56,
+                  "Total Cost": 34.63,
+                  "Plan Rows": 1,
+                  "Plan Width": 140,
+                  "Plans": [
+                   {
+                    "Node Type": "Nested Loop",
+                    "Parent Relationship": "Outer",
+                    "Join Type": "Inner",
+                    "Startup Cost": 0.28,
+                    "Total Cost": 27.4,
+                    "Plan Rows": 1,
+                    "Plan Width": 76,
+                    "Plans": [
+                     {
+                      "Node Type": "Seq Scan",
+                      "Parent Relationship": "Outer",
+                      "Relation Name": "pg_constraint",
+                      "Alias": "c",
+                      "Startup Cost": 0,
+                      "Total Cost": 2.45,
+                      "Plan Rows": 3,
+                      "Plan Width": 72,
+                      "Filter": "(contype = 'c'::\"char\")"
+                     },
+                     {
+                      "Node Type": "Index Scan",
+                      "Parent Relationship": "Inner",
+                      "Scan Direction": "Forward",
+                      "Index Name": "pg_depend_depender_index",
+                      "Relation Name": "pg_depend",
+                      "Alias": "d",
+                      "Startup Cost": 0.28,
+                      "Total Cost": 8.31,
+                      "Plan Rows": 1,
+                      "Plan Width": 12,
+                      "Index Cond": "((classid = 2606::oid) AND (objid = c.oid))",
+                      "Filter": "(refclassid = 1259::oid)"
+                     }
+                    ]
+                   },
+                   {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Inner",
+                    "Scan Direction": "Forward",
+                    "Index Name": "pg_attribute_relid_attnum_index",
+                    "Relation Name": "pg_attribute",
+                    "Alias": "a_1",
+                    "Startup Cost": 0.28,
+                    "Total Cost": 7.21,
+                    "Plan Rows": 1,
+                    "Plan Width": 70,
+                    "Index Cond": "((attrelid = d.refobjid) AND (attnum = d.refobjsubid))",
+                    "Filter": "(NOT attisdropped)"
+                   }
+                  ]
+                 },
+                 {
+                  "Node Type": "Index Scan",
+                  "Parent Relationship": "Inner",
+                  "Scan Direction": "Forward",
+                  "Index Name": "pg_class_oid_index",
+                  "Relation Name": "pg_class",
+                  "Alias": "r",
+                  "Startup Cost": 0.27,
+                  "Total Cost": 0.32,
+                  "Plan Rows": 1,
+                  "Plan Width": 76,
+                  "Index Cond": "(oid = a_1.attrelid)",
+                  "Filter": "(pg_has_role(relowner, 'USAGE'::text) AND (relkind = 'r'::\"char\"))"
+                 }
+                ]
+               },
+               {
+                "Node Type": "Index Scan",
+                "Parent Relationship": "Inner",
+                "Scan Direction": "Forward",
+                "Index Name": "pg_namespace_oid_index",
+                "Relation Name": "pg_namespace",
+                "Alias": "nr",
+                "Startup Cost": 0.13,
+                "Total Cost": 0.65,
+                "Plan Rows": 1,
+                "Plan Width": 68,
+                "Index Cond": "(oid = r.relnamespace)"
+               }
+              ]
+             },
+             {
+              "Node Type": "Seq Scan",
+              "Parent Relationship": "Inner",
+              "Relation Name": "pg_namespace",
+              "Alias": "nc",
+              "Startup Cost": 0,
+              "Total Cost": 1.06,
+              "Plan Rows": 6,
+              "Plan Width": 68
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "Node Type": "Subquery Scan",
+        "Parent Relationship": "Member",
+        "Alias": "*SELECT* 2_1",
+        "Startup Cost": 19.39,
+        "Total Cost": 425.62,
+        "Plan Rows": 3020,
+        "Plan Width": 128,
+        "Plans": [
+         {
+          "Node Type": "Nested Loop",
+          "Parent Relationship": "Subquery",
+          "Join Type": "Inner",
+          "Startup Cost": 19.39,
+          "Total Cost": 395.42,
+          "Plan Rows": 3020,
+          "Plan Width": 324,
+          "Join Filter": "CASE WHEN (c_1.contype = 'f'::\"char\") THEN ((r_1.oid = c_1.confrelid) AND (a_2.attnum = ANY (c_1.confkey))) ELSE ((r_1.oid = c_1.conrelid) AND (a_2.attnum = ANY (c_1.conkey))) END",
+          "Plans": [
+           {
+            "Node Type": "Hash Join",
+            "Parent Relationship": "Outer",
+            "Join Type": "Inner",
+            "Startup Cost": 18.26,
+            "Total Cost": 119.5,
+            "Plan Rows": 183,
+            "Plan Width": 202,
+            "Hash Cond": "(a_2.attrelid = r_1.oid)",
+            "Plans": [
+             {
+              "Node Type": "Seq Scan",
+              "Parent Relationship": "Outer",
+              "Relation Name": "pg_attribute",
+              "Alias": "a_2",
+              "Startup Cost": 0,
+              "Total Cost": 88.94,
+              "Plan Rows": 2794,
+              "Plan Width": 70,
+              "Filter": "(NOT attisdropped)"
+             },
+             {
+              "Node Type": "Hash",
+              "Parent Relationship": "Inner",
+              "Startup Cost": 17.96,
+              "Total Cost": 17.96,
+              "Plan Rows": 24,
+              "Plan Width": 136,
+              "Plans": [
+               {
+                "Node Type": "Hash Join",
+                "Parent Relationship": "Outer",
+                "Join Type": "Inner",
+                "Startup Cost": 1.14,
+                "Total Cost": 17.96,
+                "Plan Rows": 24,
+                "Plan Width": 136,
+                "Hash Cond": "(r_1.relnamespace = nr_1.oid)",
+                "Plans": [
+                 {
+                  "Node Type": "Seq Scan",
+                  "Parent Relationship": "Outer",
+                  "Relation Name": "pg_class",
+                  "Alias": "r_1",
+                  "Startup Cost": 0,
+                  "Total Cost": 16.49,
+                  "Plan Rows": 24,
+                  "Plan Width": 76,
+                  "Filter": "(pg_has_role(relowner, 'USAGE'::text) AND (relkind = 'r'::\"char\"))"
+                 },
+                 {
+                  "Node Type": "Hash",
+                  "Parent Relationship": "Inner",
+                  "Startup Cost": 1.06,
+                  "Total Cost": 1.06,
+                  "Plan Rows": 6,
+                  "Plan Width": 68,
+                  "Plans": [
+                   {
+                    "Node Type": "Seq Scan",
+                    "Parent Relationship": "Outer",
+                    "Relation Name": "pg_namespace",
+                    "Alias": "nr_1",
+                    "Startup Cost": 0,
+                    "Total Cost": 1.06,
+                    "Plan Rows": 6,
+                    "Plan Width": 68
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "Node Type": "Materialize",
+            "Parent Relationship": "Inner",
+            "Startup Cost": 1.14,
+            "Total Cost": 4.25,
+            "Plan Rows": 33,
+            "Plan Width": 183,
+            "Plans": [
+             {
+              "Node Type": "Hash Join",
+              "Parent Relationship": "Outer",
+              "Join Type": "Inner",
+              "Startup Cost": 1.14,
+              "Total Cost": 4.08,
+              "Plan Rows": 33,
+              "Plan Width": 183,
+              "Hash Cond": "(c_1.connamespace = nc_1.oid)",
+              "Plans": [
+               {
+                "Node Type": "Seq Scan",
+                "Parent Relationship": "Outer",
+                "Relation Name": "pg_constraint",
+                "Alias": "c_1",
+                "Startup Cost": 0,
+                "Total Cost": 2.5,
+                "Plan Rows": 33,
+                "Plan Width": 123,
+                "Filter": "(contype = ANY ('{p,u,f}'::\"char\"[]))"
+               },
+               {
+                "Node Type": "Hash",
+                "Parent Relationship": "Inner",
+                "Startup Cost": 1.06,
+                "Total Cost": 1.06,
+                "Plan Rows": 6,
+                "Plan Width": 68,
+                "Plans": [
+                 {
+                  "Node Type": "Seq Scan",
+                  "Parent Relationship": "Outer",
+                  "Relation Name": "pg_namespace",
+                  "Alias": "nc_1",
+                  "Startup Cost": 0,
+                  "Total Cost": 1.06,
+                  "Plan Rows": 6,
+                  "Plan Width": 68
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "Node Type": "Hash",
+      "Parent Relationship": "Inner",
+      "Startup Cost": 636.68,
+      "Total Cost": 636.68,
+      "Plan Rows": 38,
+      "Plan Width": 128,
+      "Plans": [
+       {
+        "Node Type": "Merge Join",
+        "Parent Relationship": "Outer",
+        "Join Type": "Inner",
+        "Startup Cost": 365.95,
+        "Total Cost": 636.68,
+        "Plan Rows": 38,
+        "Plan Width": 128,
+        "Merge Cond": "((a.attrelid = r_2.oid) AND (a.attnum = (((information_schema._pg_expandarray(c_2.conkey))).x)))",
+        "Join Filter": "(pg_has_role(r_2.relowner, 'USAGE'::text) OR has_column_privilege(r_2.oid, a.attnum, 'SELECT, INSERT, UPDATE, REFERENCES'::text))",
+        "Plans": [
+         {
+          "Node Type": "Index Scan",
+          "Parent Relationship": "Outer",
+          "Scan Direction": "Forward",
+          "Index Name": "pg_attribute_relid_attnum_index",
+          "Relation Name": "pg_attribute",
+          "Alias": "a",
+          "Startup Cost": 0.28,
+          "Total Cost": 242.5,
+          "Plan Rows": 2794,
+          "Plan Width": 6,
+          "Filter": "(NOT attisdropped)"
+         },
+         {
+          "Node Type": "Sort",
+          "Parent Relationship": "Inner",
+          "Startup Cost": 365.67,
+          "Total Cost": 370.17,
+          "Plan Rows": 1800,
+          "Plan Width": 168,
+          "Sort Key": [
+           "r_2.oid",
+           "(((information_schema._pg_expandarray(c_2.conkey))).x)"
+          ],
+          "Plans": [
+           {
+            "Node Type": "Hash Join",
+            "Parent Relationship": "Outer",
+            "Join Type": "Inner",
+            "Startup Cost": 153.04,
+            "Total Cost": 268.35,
+            "Plan Rows": 1800,
+            "Plan Width": 168,
+            "Hash Cond": "(((c_2.conname)::information_schema.sql_identifier)::text = (\"*SELECT* 1\".constraint_name)::text)",
+            "Plans": [
+             {
+              "Node Type": "Hash Join",
+              "Parent Relationship": "Outer",
+              "Join Type": "Inner",
+              "Startup Cost": 5.17,
+              "Total Cost": 42.47,
+              "Plan Rows": 4000,
+              "Plan Width": 323,
+              "Hash Cond": "(c_2.connamespace = nc_2.oid)",
+              "Plans": [
+               {
+                "Node Type": "Hash Join",
+                "Parent Relationship": "Outer",
+                "Join Type": "Inner",
+                "Startup Cost": 4.03,
+                "Total Cost": 20.3,
+                "Plan Rows": 4,
+                "Plan Width": 263,
+                "Hash Cond": "(r_2.relnamespace = nr_2.oid)",
+                "Plans": [
+                 {
+                  "Node Type": "Hash Join",
+                  "Parent Relationship": "Outer",
+                  "Join Type": "Inner",
+                  "Startup Cost": 2.91,
+                  "Total Cost": 19.1,
+                  "Plan Rows": 7,
+                  "Plan Width": 203,
+                  "Hash Cond": "(r_2.oid = c_2.conrelid)",
+                  "Plans": [
+                   {
+                    "Node Type": "Seq Scan",
+                    "Parent Relationship": "Outer",
+                    "Relation Name": "pg_class",
+                    "Alias": "r_2",
+                    "Startup Cost": 0,
+                    "Total Cost": 15.57,
+                    "Plan Rows": 73,
+                    "Plan Width": 76,
+                    "Filter": "(relkind = 'r'::\"char\")"
+                   },
+                   {
+                    "Node Type": "Hash",
+                    "Parent Relationship": "Inner",
+                    "Startup Cost": 2.5,
+                    "Total Cost": 2.5,
+                    "Plan Rows": 33,
+                    "Plan Width": 131,
+                    "Plans": [
+                     {
+                      "Node Type": "Seq Scan",
+                      "Parent Relationship": "Outer",
+                      "Relation Name": "pg_constraint",
+                      "Alias": "c_2",
+                      "Startup Cost": 0,
+                      "Total Cost": 2.5,
+                      "Plan Rows": 33,
+                      "Plan Width": 131,
+                      "Filter": "(contype = ANY ('{p,u,f}'::\"char\"[]))"
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "Node Type": "Hash",
+                  "Parent Relationship": "Inner",
+                  "Startup Cost": 1.07,
+                  "Total Cost": 1.07,
+                  "Plan Rows": 4,
+                  "Plan Width": 68,
+                  "Plans": [
+                   {
+                    "Node Type": "Seq Scan",
+                    "Parent Relationship": "Outer",
+                    "Relation Name": "pg_namespace",
+                    "Alias": "nr_2",
+                    "Startup Cost": 0,
+                    "Total Cost": 1.07,
+                    "Plan Rows": 4,
+                    "Plan Width": 68,
+                    "Filter": "(NOT pg_is_other_temp_schema(oid))"
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "Node Type": "Hash",
+                "Parent Relationship": "Inner",
+                "Startup Cost": 1.06,
+                "Total Cost": 1.06,
+                "Plan Rows": 6,
+                "Plan Width": 68,
+                "Plans": [
+                 {
+                  "Node Type": "Seq Scan",
+                  "Parent Relationship": "Outer",
+                  "Relation Name": "pg_namespace",
+                  "Alias": "nc_2",
+                  "Startup Cost": 0,
+                  "Total Cost": 1.06,
+                  "Plan Rows": 6,
+                  "Plan Width": 68
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "Node Type": "Hash",
+              "Parent Relationship": "Inner",
+              "Startup Cost": 146.75,
+              "Total Cost": 146.75,
+              "Plan Rows": 90,
+              "Plan Width": 64,
+              "Plans": [
+               {
+                "Node Type": "Append",
+                "Parent Relationship": "Outer",
+                "Startup Cost": 0.41,
+                "Total Cost": 146.75,
+                "Plan Rows": 90,
+                "Plan Width": 64,
+                "Plans": [
+                 {
+                  "Node Type": "Subquery Scan",
+                  "Parent Relationship": "Member",
+                  "Alias": "*SELECT* 1",
+                  "Startup Cost": 0.41,
+                  "Total Cost": 12.82,
+                  "Plan Rows": 1,
+                  "Plan Width": 64,
+                  "Plans": [
+                   {
+                    "Node Type": "Nested Loop",
+                    "Parent Relationship": "Subquery",
+                    "Join Type": "Inner",
+                    "Startup Cost": 0.41,
+                    "Total Cost": 12.81,
+                    "Plan Rows": 1,
+                    "Plan Width": 259,
+                    "Plans": [
+                     {
+                      "Node Type": "Nested Loop",
+                      "Parent Relationship": "Outer",
+                      "Join Type": "Inner",
+                      "Startup Cost": 0.27,
+                      "Total Cost": 12.37,
+                      "Plan Rows": 1,
+                      "Plan Width": 199,
+                      "Plans": [
+                       {
+                        "Node Type": "Nested Loop",
+                        "Parent Relationship": "Outer",
+                        "Join Type": "Inner",
+                        "Startup Cost": 0,
+                        "Total Cost": 4.04,
+                        "Plan Rows": 1,
+                        "Plan Width": 135,
+                        "Join Filter": "(nc_3.oid = c_3.connamespace)",
+                        "Plans": [
+                         {
+                          "Node Type": "Seq Scan",
+                          "Parent Relationship": "Outer",
+                          "Relation Name": "pg_constraint",
+                          "Alias": "c_3",
+                          "Startup Cost": 0,
+                          "Total Cost": 2.9,
+                          "Plan Rows": 1,
+                          "Plan Width": 75,
+                          "Filter": "((contype <> ALL ('{t,x}'::\"char\"[])) AND (((CASE contype WHEN 'c'::\"char\" THEN 'CHECK'::text WHEN 'f'::\"char\" THEN 'FOREIGN KEY'::text WHEN 'p'::\"char\" THEN 'PRIMARY KEY'::text WHEN 'u'::\"char\" THEN 'UNIQUE'::text ELSE NULL::text END)::information_schema.character_data)::text = 'FOREIGN KEY'::text))"
+                         },
+                         {
+                          "Node Type": "Seq Scan",
+                          "Parent Relationship": "Inner",
+                          "Relation Name": "pg_namespace",
+                          "Alias": "nc_3",
+                          "Startup Cost": 0,
+                          "Total Cost": 1.06,
+                          "Plan Rows": 6,
+                          "Plan Width": 68
+                         }
+                        ]
+                       },
+                       {
+                        "Node Type": "Index Scan",
+                        "Parent Relationship": "Inner",
+                        "Scan Direction": "Forward",
+                        "Index Name": "pg_class_oid_index",
+                        "Relation Name": "pg_class",
+                        "Alias": "r_3",
+                        "Startup Cost": 0.27,
+                        "Total Cost": 8.33,
+                        "Plan Rows": 1,
+                        "Plan Width": 72,
+                        "Index Cond": "(oid = c_3.conrelid)",
+                        "Filter": "((relkind = 'r'::\"char\") AND (pg_has_role(relowner, 'USAGE'::text) OR has_table_privilege(oid, 'INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER'::text) OR has_any_column_privilege(oid, 'INSERT, UPDATE, REFERENCES'::text)))"
+                       }
+                      ]
+                     },
+                     {
+                      "Node Type": "Index Scan",
+                      "Parent Relationship": "Inner",
+                      "Scan Direction": "Forward",
+                      "Index Name": "pg_namespace_oid_index",
+                      "Relation Name": "pg_namespace",
+                      "Alias": "nr_3",
+                      "Startup Cost": 0.13,
+                      "Total Cost": 0.39,
+                      "Plan Rows": 1,
+                      "Plan Width": 68,
+                      "Index Cond": "(oid = r_3.relnamespace)",
+                      "Filter": "(NOT pg_is_other_temp_schema(oid))"
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "Node Type": "Subquery Scan",
+                  "Parent Relationship": "Member",
+                  "Alias": "*SELECT* 2",
+                  "Startup Cost": 28.64,
+                  "Total Cost": 133.93,
+                  "Plan Rows": 89,
+                  "Plan Width": 64,
+                  "Plans": [
+                   {
+                    "Node Type": "Result",
+                    "Parent Relationship": "Subquery",
+                    "Startup Cost": 28.64,
+                    "Total Cost": 133.04,
+                    "Plan Rows": 89,
+                    "Plan Width": 138,
+                    "One-Time Filter": "((('CHECK'::character varying)::information_schema.character_data)::text = 'FOREIGN KEY'::text)",
+                    "Plans": [
+                     {
+                      "Node Type": "Hash Join",
+                      "Parent Relationship": "Outer",
+                      "Join Type": "Inner",
+                      "Startup Cost": 28.64,
+                      "Total Cost": 129.04,
+                      "Plan Rows": 89,
+                      "Plan Width": 138,
+                      "Hash Cond": "(a_3.attrelid = r_4.oid)",
+                      "Plans": [
+                       {
+                        "Node Type": "Seq Scan",
+                        "Parent Relationship": "Outer",
+                        "Relation Name": "pg_attribute",
+                        "Alias": "a_3",
+                        "Startup Cost": 0,
+                        "Total Cost": 95.93,
+                        "Plan Rows": 956,
+                        "Plan Width": 6,
+                        "Filter": "(attnotnull AND (NOT attisdropped) AND (attnum > 0))"
+                       },
+                       {
+                        "Node Type": "Hash",
+                        "Parent Relationship": "Inner",
+                        "Startup Cost": 28.21,
+                        "Total Cost": 28.21,
+                        "Plan Rows": 34,
+                        "Plan Width": 136,
+                        "Plans": [
+                         {
+                          "Node Type": "Hash Join",
+                          "Parent Relationship": "Outer",
+                          "Join Type": "Inner",
+                          "Startup Cost": 1.12,
+                          "Total Cost": 28.21,
+                          "Plan Rows": 34,
+                          "Plan Width": 136,
+                          "Hash Cond": "(r_4.relnamespace = nr_4.oid)",
+                          "Plans": [
+                           {
+                            "Node Type": "Seq Scan",
+                            "Parent Relationship": "Outer",
+                            "Relation Name": "pg_class",
+                            "Alias": "r_4",
+                            "Startup Cost": 0,
+                            "Total Cost": 26.55,
+                            "Plan Rows": 51,
+                            "Plan Width": 72,
+                            "Filter": "((relkind = 'r'::\"char\") AND (pg_has_role(relowner, 'USAGE'::text) OR has_table_privilege(oid, 'INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER'::text) OR has_any_column_privilege(oid, 'INSERT, UPDATE, REFERENCES'::text)))"
+                           },
+                           {
+                            "Node Type": "Hash",
+                            "Parent Relationship": "Inner",
+                            "Startup Cost": 1.07,
+                            "Total Cost": 1.07,
+                            "Plan Rows": 4,
+                            "Plan Width": 68,
+                            "Plans": [
+                             {
+                              "Node Type": "Seq Scan",
+                              "Parent Relationship": "Outer",
+                              "Relation Name": "pg_namespace",
+                              "Alias": "nr_4",
+                              "Startup Cost": 0,
+                              "Total Cost": 1.07,
+                              "Plan Rows": 4,
+                              "Plan Width": 68,
+                              "Filter": "(NOT pg_is_other_temp_schema(oid))"
+                             }
+                            ]
+                           }
+                          ]
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}
