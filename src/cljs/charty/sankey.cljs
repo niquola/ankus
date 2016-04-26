@@ -44,9 +44,11 @@
                            (attr "class" "pane")
                            (attr "transform" (translate (:left margin) (:right margin))))
 
+                       color (.. js/d3 -scale (category20))
+
                        sank (.. js/d3 (sankey)
-                                  (nodeWidth 36)
-                                  (nodePadding 10)
+                                  (nodeWidth 5)
+                                  (nodePadding 30)
                                   (size #js[(:width box) (:height box)]))
 
                        path  (.. sank (link))
@@ -68,12 +70,16 @@
                                   (attr "class" "link")
                                   (attr "d" (fn [d] (path d)))
                                   (style "fill" "transparent")
-                                  (style "stroke" "white")
+                                  (style "stroke"
+                                         (fn [d]
+                                           (let [clr (color (.. d -source -type))]
+                                             (aset d "color" clr)
+                                             clr)))
                                   (style "stroke-width" (fn [d] (.max js/Math 1 (.-dy d))))
                                   (sort (fn [a b] (- (.-dy b) (.-dy a)))))
 
                          _ (.. link (append "title")
-                               (text (fn [d] (str (.. d -source -name) "->" (.. d -target -name) "\n" (.. d -value)))))
+                               (text (fn [d] (.. d -details))))
 
                          node (.. g (append "g")
                                   (selectAll ".node")
@@ -91,8 +97,11 @@
                      (.. node (append "rect")
                          (attr "height" #(.-dy %))
                          (attr "width" #(.. sank (nodeWidth)))
-                         (style "fill" (fn [d] "#999"))
-                         (style "stroke" (fn [d] "#444"))
+                         (style "fill" (fn [d]
+                                         (let [clr (color (.-type d))]
+                                           (aset d "color" clr)
+                                           clr)))
+                         (style "stroke" (fn [d] (.-color d)))
                          (append "title")
                          (text (fn [d] (.. d -name))))
 
@@ -112,7 +121,7 @@
      {:reagent-render (fn [] [:div
                               [:style "
                                   .node rect {cursor: move; fill-opacity: .9; shape-rendering: crispEdges;}
-                                  .node text {pointer-events: none; font-size: 10px; fill: white;}
+                                  .node text {pointer-events: none; font-size: 12px; fill: white;}
                                   .link {fill: none; stroke: #000; stroke-opacity: .2;}
                                   .link:hover {z-index: 1000; stroke-opacity: .5;}
                                   "]
@@ -123,31 +132,38 @@
                                (render d3data)))
 
       :component-did-update (fn [this]
-                              #_(let [[_ _ data] (r/argv this)
+                              (let [[_ _ data] (r/argv this)
                                     d3data (clj->js data)]
                                 (render d3data)))})))
 
+(defn copy [node]
+  (let [obj (.parse js/JSON (.stringify js/JSON node))]
+    (js-delete obj "Plans")
+    obj))
+
 (defn recur-plan [nodes links node]
-  (let [id (.-length nodes)
-        dnode #js{:id id :name (str
-                                (aget node "Node Type")
-                                " "
-                                (aget node "Relation Name"))
-                  :value (aget node "Total Cost")}]
-    (.push nodes dnode)
+  (let [dnode #js{:name (str (aget node "Node Type")
+                             " "
+                             (aget node "Relation Name"))
+                  :type (aget node "Node Type")
+                  :details (.stringify js/JSON (copy node) nil " ")
+                  :value (aget node "Plan Width")}] ;;"Total Cost"
+    
     (when-let [plans (aget node "Plans")]
       (doseq [plan plans]
         (let [child (recur-plan nodes links plan)]
           (.push links
                  #js{:target dnode
                      :source child
+                     :details (.-details child) 
                      :value (.-value child)}))))
+    (.push nodes dnode)
     dnode))
 
 (defn plan-to-sankey [data]
   (let [plan (aget (first (aget data "QUERY PLAN")) "Plan")
         nodes #js[]
         links #js[]]
-    (.log js/console plan)
     (recur-plan nodes links plan)
+    (println links)
     #js{:nodes nodes :links links}))

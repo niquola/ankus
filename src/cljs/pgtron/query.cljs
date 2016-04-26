@@ -17,6 +17,9 @@
 (defn- graph? [x]
   (and x (.-graph_source_id x) (.-graph_target_id x)))
 
+(defn- explain? [x]
+  (and x (aget x "QUERY PLAN")))
+
 (def examples [{:title "Pie Chart"
                 :sql "SELECT pg_relation_size(c.oid) AS pie_value,
          t.tablename as pie_label
@@ -42,7 +45,14 @@ JOIN information_schema.key_column_usage AS kcu
   ON tc.constraint_name = kcu.constraint_name
 JOIN information_schema.constraint_column_usage AS ccu
   ON ccu.constraint_name = tc.constraint_name
-WHERE constraint_type = 'FOREIGN KEY'"}])
+WHERE constraint_type = 'FOREIGN KEY'"}
+
+               {:title "Explain"
+                :sql "EXPLAIN (FORMAT JSON)
+  SELECT *
+    FROM information_schema.columns
+   WHERE column_name = 'ups'
+   LIMIT 10"}])
 
 
 (defn $index [{db :db :as params}]
@@ -81,6 +91,10 @@ WHERE constraint_type = 'FOREIGN KEY'"}])
                            [:h3 "Graph Chart:"]
                            [chart/force-graph {:width 1000 :height 600} rows]]
 
+             (explain? fst) [:div [:h1 "Graph"]
+                             [chart/sankey {:width 1200 :height 800}
+                              (chart/plan-to-sankey fst)]]
+             
              (chart? fst) [:div
                            [:h3 "Area Chart:"]
                            [chart/area-chart {:width 1000 :height 400}

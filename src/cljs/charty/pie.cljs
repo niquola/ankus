@@ -72,13 +72,13 @@
                        (insert "path")
                        (attr "class" "slice")
                        (style "fill" (fn [d] (color (.. d -data -label)))))
-                   (.. (transition) (duration 1000)
+                   (.. (transition) (duration 200)
                        (attrTween "d" (interpol (fn [inter t] (arc (inter t))))))
                    (.. (exit) (remove)))
 
                  (doto (.. labels (selectAll "text") (data (pie data) key))
                    (.. (enter) (append "text") (attr "dy" ".35em") (text key))
-                   (.. (transition) (duration 1000)
+                   (.. (transition) (duration 200)
                        (attrTween "transform"
                                   (interpol (fn [inter t]
                                               (let [d2 (inter t)
@@ -91,7 +91,7 @@
 
                  (doto (.. lines (selectAll "polyline") (data (pie data) key))
                    (.. (enter) (append "polyline"))
-                   (.. (transition) (duration 1000)
+                   (.. (transition) (duration 200)
                        (attrTween "points"
                                   (interpol (fn [inter t]
                                               (let [d2 (inter t)
