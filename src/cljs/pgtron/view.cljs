@@ -10,7 +10,7 @@
   (.stringify js/JSON x nil " "))
 
 (defn sql [sch vw]
-  (str "SELECT pg_get_viewdef('" vw "', true) as define"))
+  (str "SELECT pg_get_viewdef('" sch "." vw "', true) as define"))
 
 (defn $index [{db :db sch :schema vw :view :as params}]
   (let [state (atom {})]

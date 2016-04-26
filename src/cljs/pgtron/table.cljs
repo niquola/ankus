@@ -4,6 +4,8 @@
             [clojure.string :as str]
             [pgtron.layout :as l]
             [pgtron.pg :as pg]
+            [pgtron.docs :as docs]
+            [pgtron.widgets :as wg]
             [charty.core :as chart]
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style icon]]))
@@ -12,32 +14,45 @@
   (str
 "SELECT
 a.attname as column_name,
+a.attnotnull as not_null,
 t.relname as table_name,
 tp.typname as type,
+round((
+CASE
+    WHEN s.stakind1 = 3 THEN s.stanumbers1[1]
+    WHEN s.stakind2 = 3 THEN s.stanumbers2[1]
+    WHEN s.stakind3 = 3 THEN s.stanumbers3[1]
+    WHEN s.stakind4 = 3 THEN s.stanumbers4[1]
+    WHEN s.stakind5 = 3 THEN s.stanumbers5[1]
+    ELSE NULL::real
+END
+)::numeric
+, 3) AS correlation,
 s.stanullfrac AS null_frac,
 s.stawidth AS avg_width,
-s.stadistinct AS n_distinct
+round(s.stadistinct::numeric, 3) AS n_distinct
 FROM pg_attribute a
 JOIN pg_class t ON t.oid = a.attrelid
 JOIN pg_type tp  ON a.atttypid = tp.oid
 LEFT JOIN pg_statistic s ON s.starelid = a.attrelid AND s.staattnum = a.attnum
 WHERE NOT a.attisdropped
-AND NOT a.attislocal
+AND a.attnum > 0
  AND t.relname = '" tbl "'"))
 
 (defn query-indices [db tbl]
   (str "select i.relname as index_name,
-       a.attname as column_name,
+     --  a.attname as column_name,
        pg_get_indexdef(i.oid) as define
        --i.*
  from pg_class t,
       pg_class i,
-      pg_index ix,
-      pg_attribute a
+      pg_index ix
+
+--      pg_attribute a
 where t.oid = ix.indrelid
   and i.oid = ix.indexrelid
-  and a.attrelid = t.oid
-  and a.attnum = ANY(ix.indkey)
+--  and a.attrelid = t.oid
+--  and a.attnum = ANY(ix.indkey)
   and t.relkind = 'r'
   and t.relname  = '" tbl "'
 order by i.relname"))
@@ -62,6 +77,7 @@ order by i.relname"))
          [:h3 {:$margin [1 0]
                :border-bottom "1px solid #666"
                :$color :gray}]
+         [:span.required {:$color :red}]
          [:#data {:$color [:white :bg-1]
                   :$text [0.8]
                   :vertical-align "top"
@@ -92,41 +108,23 @@ order by i.relname"))
            [:th "column"]
            [:th "type"]
            [:th "nulls"]
-           [:th "correlation"]
-           [:th "distinct"]
+           [:th "correlation" [wg/tooltip "Distinct" (docs/tip :pg_statistic.correlation)]]
+           [:th "distinct"    [wg/tooltip "Distinct" (docs/tip :pg_statistic.distinct)]]
            [:th "avg width"]
            [:th "default"]]]
          [:tbody
           (for [attr (:items @state)]
             [:tr {:key (.-column_name attr)}
-             [:td (.-column_name attr)]
+             [:td (.-column_name attr) (when (.-not_null attr) [:span.required " *"])]
              [:td [:span.type (.-type attr)]]
              [:td.nulls
-              (if (= "NO" (.-is_nullable attr))
-                [:span.text-muted "NOT NULL"]
-                (.-null_frac attr))]
+              (when-not (.-not_null attr) (.-null_frac attr))]
              [:td.num (.-correlation attr)]
              [:td.num (.-n_distinct attr)]
              [:td.num (.-avg_width attr)]
              [:td.text-muted (.-column_default attr)]
              #_[:td [:pre (.stringify js/JSON attr nil " ")]]])]]
-        [:p.notes
-         [:b "Correlation "]
-         "Statistical correlation between physical row ordering and
-         logical ordering of the column values. This ranges from -1 to +1. When
-         the value is near -1 or +1, an index scan on the column will be
-         estimated to be cheaper than when it is near zero, due to reduction of
-         random access to the disk. (This column is null if the column data type
-         does not have a < operator.)"
-         [:br]
-         [:b "Distinct "]
-         "If greater than zero, the estimated number of distinct values in the
-          column. If less than zero, the negative of the number of distinct values divided
-          by the number of rows. (The negated form is used when ANALYZE believes that the
-          number of distinct values is likely to increase as the table grows; the positive
-          form is used when the column seems to have a fixed number of possible values.)
-          For example, -1 indicates a unique column in which the number of distinct values
-          is the same as the number of rows."]]
+        ]
 
        [:div.columns
         [:h3 "Indices"]
