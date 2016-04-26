@@ -8,5 +8,6 @@
 (def pie pie/pie)
 (def area-chart area-chart/area-chart)
 (def force-graph force/force-graph)
+(def plan-to-sankey sankey/plan-to-sankey)
 (def sankey sankey/sankey-diag)
 

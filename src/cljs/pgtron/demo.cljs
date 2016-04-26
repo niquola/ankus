@@ -37,14 +37,18 @@
        [:div [:h1 "Graph"]
         [chart/force-graph {:width 800 :height 800} data]]])))
 
-(def data
-  #js[#js{:label "one"}])
+(def fs (js/require "fs"))
+
+(defn read-file [path]
+  (.readFileSync fs path))
+
+(def data (.parse js/JSON (read-file "plan.json")))
 
 (defn $index [params]
   (let [state (r/atom {:inc 1 :items []})]
     (fn []
       [l/layout {}
        [:div [:h1 "Graph"]
-        [chart/sankey {:width 800 :height 400} data]]])))
+        [chart/sankey {:width 1400 :height 1000} (chart/plan-to-sankey data)]]])))
 
 

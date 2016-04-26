@@ -51,7 +51,9 @@
 
                        path  (.. sank (link))
 
-                       [node-data link-data] (mk-data data)]
+                       node-data (.-nodes data)
+
+                       link-data (.-links data) ]
 
                    (.. sank
                        (nodes node-data)
@@ -67,7 +69,7 @@
                                   (attr "d" (fn [d] (path d)))
                                   (style "fill" "transparent")
                                   (style "stroke" "white")
-                                  (style "stroke-width" (fn [d] (.max js/Math 10 (.-dy d))))
+                                  (style "stroke-width" (fn [d] (.max js/Math 1 (.-dy d))))
                                   (sort (fn [a b] (- (.-dy b) (.-dy a)))))
 
                          _ (.. link (append "title")
@@ -110,7 +112,7 @@
      {:reagent-render (fn [] [:div
                               [:style "
                                   .node rect {cursor: move; fill-opacity: .9; shape-rendering: crispEdges;}
-                                  .node text {pointer-events: none; fill: white;}
+                                  .node text {pointer-events: none; font-size: 10px; fill: white;}
                                   .link {fill: none; stroke: #000; stroke-opacity: .2;}
                                   .link:hover {z-index: 1000; stroke-opacity: .5;}
                                   "]
@@ -124,3 +126,28 @@
                               #_(let [[_ _ data] (r/argv this)
                                     d3data (clj->js data)]
                                 (render d3data)))})))
+
+(defn recur-plan [nodes links node]
+  (let [id (.-length nodes)
+        dnode #js{:id id :name (str
+                                (aget node "Node Type")
+                                " "
+                                (aget node "Relation Name"))
+                  :value (aget node "Total Cost")}]
+    (.push nodes dnode)
+    (when-let [plans (aget node "Plans")]
+      (doseq [plan plans]
+        (let [child (recur-plan nodes links plan)]
+          (.push links
+                 #js{:target dnode
+                     :source child
+                     :value (.-value child)}))))
+    dnode))
+
+(defn plan-to-sankey [data]
+  (let [plan (aget (first (aget data "QUERY PLAN")) "Plan")
+        nodes #js[]
+        links #js[]]
+    (.log js/console plan)
+    (recur-plan nodes links plan)
+    #js{:nodes nodes :links links}))
