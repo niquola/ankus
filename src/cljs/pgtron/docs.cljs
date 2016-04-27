@@ -66,7 +66,7 @@
 (defn catalog-docs [name]
   (let [id (str "catalog-" (str/replace  name #"_" "-"))
         html (aget catalogs id)]
-    (.-doc html)))
+    (when html (.-doc html))))
 
 
 (defn catalog-column-docs [name column]

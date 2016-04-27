@@ -73,3 +73,20 @@
 (defn tooltip [title content]
   [:span.tt (icon :question)
    [:div.tt-content content]])
+
+(def block-style
+  [:.block {:$color [:white :bg-1]
+            :vertical-align "top"
+            :$margin [0 1 1 0]
+            :float "left"
+            :$padding [1 2]
+            :display "inline-block"}
+   [:h3.block-title {:$margin [1 0]
+                     :border-bottom "1px solid #666"
+                     :$color :gray}]])
+
+(defn block [title content]
+  [:div.block
+   [:h3.block-title title]
+   [:div.block-content content]])
+

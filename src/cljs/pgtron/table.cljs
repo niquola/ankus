@@ -90,16 +90,8 @@ order by i.relname"))
          docs/styles
          [:.docs {:$width 60}
           #_[:row {:display "none"}]]
-         [:.columns {:$color [:white :bg-1]
-                     :vertical-align "top"
-                     :$margin [0 1 1 0]
-                     :float "left"
-                     :$padding [1 2]
-                     :display "inline-block"}
-          [:p.notes {:$margin [1 0 0 0]
-                     :width "50em"
-                     :$text [0.8]}
-           [:b {:$color :orange}]]
+         wg/block-style
+         [:.block 
           [:td.num {:text-align "right" :$color :blue}]
           [:th {:$color :gray}]
           [:.type {:$color :green}]
@@ -108,76 +100,54 @@ order by i.relname"))
 
        
        
-       [:div.columns
-        [:h3 "Columns"]
-        [:table.table-condensed
-         [:thead
-          [:tr
-           [:th "column"]
-           [:th "type"]
-           [:th "nulls"]
-           [:th "correlation" [wg/tooltip "Distinct" (docs/tip :pg_statistic.correlation)]]
-           [:th "distinct"    [wg/tooltip "Distinct" (docs/tip :pg_statistic.distinct)]]
-           [:th "avg width"]
-           [:th "default"]]]
-         [:tbody
-          (for [attr (:items @state)]
-            [:tr {:key (.-column_name attr)}
-             [:td (.-column_name attr)
-              (when (.-not_null attr) [:span.required " *"])
-              (when-let [doc (docs/catalog-column-docs tbl (.-column_name attr))]
-                [wg/tooltip "docs" [:div
-                                    [:p {:dangerouslySetInnerHTML #js{:__html (.-ref doc)}}]
-                                    [:p {:dangerouslySetInnerHTML #js{:__html (.-details doc)}}]]])]
-             [:td [:span.type (.-type attr)]]
-             [:td.nulls
-              (when-not (.-not_null attr) (.-null_frac attr))]
-             [:td.num (.-correlation attr)]
-             [:td.num (.-n_distinct attr)]
-             [:td.num (.-avg_width attr)]
-             [:td.text-muted (.-column_default attr)]])]]]
+       (wg/block "Columns"
+        [:div
+         [:table.table-condensed
+          [:thead
+           [:tr
+            [:th "column"]
+            [:th "type"]
+            [:th "nulls"]
+            [:th "correlation" [wg/tooltip "Distinct" (docs/tip :pg_statistic.correlation)]]
+            [:th "distinct"    [wg/tooltip "Distinct" (docs/tip :pg_statistic.distinct)]]
+            [:th "avg width"]
+            [:th "default"]]]
+          [:tbody
+           (for [attr (:items @state)]
+             [:tr {:key (.-column_name attr)}
+              [:td (.-column_name attr)
+               (when (.-not_null attr) [:span.required " *"])
+               (when-let [doc (docs/catalog-column-docs tbl (.-column_name attr))]
+                 [wg/tooltip "docs" [:div
+                                     [:p {:dangerouslySetInnerHTML #js{:__html (.-ref doc)}}]
+                                     [:p {:dangerouslySetInnerHTML #js{:__html (.-details doc)}}]]])]
+              [:td [:span.type (.-type attr)]]
+              [:td.nulls
+               (when-not (.-not_null attr) (.-null_frac attr))]
+              [:td.num (.-correlation attr)]
+              [:td.num (.-n_distinct attr)]
+              [:td.num (.-avg_width attr)]
+              [:td.text-muted (.-column_default attr)]])]]])
 
 
        (when info
-         [:div.columns.docs
-          [:h3 "Documentation"]
-          [:div {:dangerouslySetInnerHTML #js{:__html info}}]])
+         (wg/block "Documentation"
+                   [:div.docs {:dangerouslySetInnerHTML #js{:__html info}}]))
 
-       [:div.columns.docs
-        [:h3 "Columns Size"]
-        [chart/pie {:width 500 :height 220}
-         (map (fn [x] {:label (.-column_name x)
-                       :value (.-avg_width x)})
-              (take 5 (reverse (sort-by #(.-avg_width %) (:items @state)))))]]
+       (wg/block "Columns Size"
+        [:div.docs
+         [chart/pie {:width 500 :height 220}
+          (map (fn [x] {:label (.-column_name x)
+                        :value (.-avg_width x)})
+               (take 5 (reverse (sort-by #(.-avg_width %) (:items @state)))))]])
 
-       [:div.columns
-        [:h3 "Indices"]
-        (for [attr (:indices @state)]
-          [:div.attr {:key (.-index_name attr)}
-           [:span (str/replace (.-define attr) #"CREATE (UNIQUE )?INDEX " "")]
-           #_[:pre (.stringify js/JSON attr nil " ")]])]
+       (wg/block "Indices"
+                 [:div (for [attr (:indices @state)]
+                         [:div.attr {:key (.-index_name attr)}
+                          [:span (str/replace (.-define attr) #"CREATE (UNIQUE )?INDEX " "")]])])
 
 
-       [:div#data
-        [:h3 "Data"]
-        [wg/table (:data @state)]
-        #_(let [rows 
-              one (first rows)
-              keys (and one (.keys js/Object one))]
-          [:table.table-condensed
-           [:thead
-            [:tr
-             (for [k keys] [:th {:key k} k])]]
-           [:tbody
-            (for [row (:data @state)]
-              [:tr {:key (.stringify js/JSON row)}
-               (for [k keys]
-                 [:td.value {:key k :title k}
-                  (let [value (.stringify js/JSON (aget row k) nil " ")]
-                    (if (< (.-length value) 100)
-                      value
-                      (str (.substring value 0 100) "...")))
-                  ])])]])]])))
+       (wg/block "Data" [wg/table (:data @state)])])))
 
 (defn $index [{db :db sch :schema tbl :table :as params}]
   [l/layout {:params params
