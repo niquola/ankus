@@ -64,6 +64,35 @@ order by i.relname"))
   (str "SELECT *  FROM pg_stats WHERE tablename = '" tbl "'"))
 
 
+(defn attributes [tbl attrs]
+  [:div
+  [:table.table-condensed
+   [:thead
+    [:tr
+     [:th "column"]
+     [:th "type"]
+     [:th "nulls"]
+     [:th "correlation" [wg/tooltip "Distinct" (docs/tip :pg_statistic.correlation)]]
+     [:th "distinct"    [wg/tooltip "Distinct" (docs/tip :pg_statistic.distinct)]]
+     [:th "avg width"]
+     [:th "default"]]]
+   [:tbody
+    (for [attr attrs]
+      [:tr {:key (.-column_name attr)}
+       [:td (.-column_name attr)
+        (when (.-not_null attr) [:span.required " *"])
+        (when-let [doc (docs/catalog-column-docs tbl (.-column_name attr))]
+          [wg/tooltip "docs" [:div
+                              [:p {:dangerouslySetInnerHTML #js{:__html (.-ref doc)}}]
+                              [:p {:dangerouslySetInnerHTML #js{:__html (.-details doc)}}]]])]
+       [:td [:span.type (.-type attr)]]
+       [:td.nulls
+        (when-not (.-not_null attr) (.-null_frac attr))]
+       [:td.num (.-correlation attr)]
+       [:td.num (.-n_distinct attr)]
+       [:td.num (.-avg_width attr)]
+       [:td.text-muted (.-column_default attr)]])]]])
+
 (defn table [db tbl]
   (let [state (atom {})
         info (docs/catalog-docs tbl)]
@@ -100,34 +129,7 @@ order by i.relname"))
 
        
        
-       (wg/block "Columns"
-        [:div
-         [:table.table-condensed
-          [:thead
-           [:tr
-            [:th "column"]
-            [:th "type"]
-            [:th "nulls"]
-            [:th "correlation" [wg/tooltip "Distinct" (docs/tip :pg_statistic.correlation)]]
-            [:th "distinct"    [wg/tooltip "Distinct" (docs/tip :pg_statistic.distinct)]]
-            [:th "avg width"]
-            [:th "default"]]]
-          [:tbody
-           (for [attr (:items @state)]
-             [:tr {:key (.-column_name attr)}
-              [:td (.-column_name attr)
-               (when (.-not_null attr) [:span.required " *"])
-               (when-let [doc (docs/catalog-column-docs tbl (.-column_name attr))]
-                 [wg/tooltip "docs" [:div
-                                     [:p {:dangerouslySetInnerHTML #js{:__html (.-ref doc)}}]
-                                     [:p {:dangerouslySetInnerHTML #js{:__html (.-details doc)}}]]])]
-              [:td [:span.type (.-type attr)]]
-              [:td.nulls
-               (when-not (.-not_null attr) (.-null_frac attr))]
-              [:td.num (.-correlation attr)]
-              [:td.num (.-n_distinct attr)]
-              [:td.num (.-avg_width attr)]
-              [:td.text-muted (.-column_default attr)]])]]])
+       (wg/block "Columns" [attributes tbl (:items @state)])
 
 
        (when info

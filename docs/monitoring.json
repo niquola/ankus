@@ -1,0 +1,708 @@
+{
+ "monitoring-stats-dynamic-views-table": {
+  "doc": "",
+  "columns": {}
+ },
+ "monitoring-stats-views-table": {
+  "doc": "   The per-index statistics are particularly useful to determine which\n   indexes are being used and how effective they are.\n     The <structname>pg_statio_</structname> views are primarily useful to\n   determine the effectiveness of the buffer cache.  When the number\n   of actual disk reads is much smaller than the number of buffer\n   hits, then the cache is satisfying most read requests without\n   invoking a kernel call. However, these statistics do not give the\n   entire story: due to the way in which <productname>PostgreSQL</productname>\n   handles disk I/O, data that is not in the\n   <productname>PostgreSQL</productname> buffer cache might still reside in the\n   kernel's I/O cache, and might therefore still be fetched without\n   requiring a physical read. Users interested in obtaining more\n   detailed information on <productname>PostgreSQL</productname> I/O behavior are\n   advised to use the <productname>PostgreSQL</productname> statistics collector\n   in combination with operating system utilities that allow insight\n   into the kernel's handling of I/O.\n  ",
+  "columns": {}
+ },
+ "pg-stat-activity-view": {
+  "doc": "   The <structname>pg_stat_activity</structname> view will have one row\n   per server process, showing information related to\n   the current activity of that process.\n     <para>    The <structfield>wait_event</structfield> and <structfield>state</structfield> columns are\n    independent.  If a backend is in the <literal>active</literal> state,\n    it may or may not be <literal>waiting</literal> on some event.  If the state\n    is <literal>active</literal> and <structfield>wait_event</structfield> is non-null, it\n    means that a query is being executed, but is being blocked somewhere\n    in the system.\n   </para>\n  ",
+  "columns": {
+   "datid": {
+    "type": "oid",
+    "details": "OID of the database this backend is connected to"
+   },
+   "datname": {
+    "type": "name",
+    "details": "Name of the database this backend is connected to"
+   },
+   "pid": {
+    "type": "integer",
+    "details": "Process ID of this backend"
+   },
+   "usesysid": {
+    "type": "oid",
+    "details": "OID of the user logged into this backend"
+   },
+   "usename": {
+    "type": "name",
+    "details": "Name of the user logged into this backend"
+   },
+   "application_name": {
+    "type": "text",
+    "details": "Name of the application that is connected\n      to this backend"
+   },
+   "client_addr": {
+    "type": "inet",
+    "details": "IP address of the client connected to this backend.\n      If this field is null, it indicates either that the client is\n      connected via a Unix socket on the server machine or that this is an\n      internal process such as autovacuum.\n     "
+   },
+   "client_hostname": {
+    "type": "text",
+    "details": "Host name of the connected client, as reported by a\n      reverse DNS lookup of <structfield>client_addr</structfield>. This field will\n      only be non-null for IP connections, and only when <xref linkend=\"guc-log-hostname\"> is enabled.\n     </xref>"
+   },
+   "client_port": {
+    "type": "integer",
+    "details": "TCP port number that the client is using for communication\n      with this backend, or <literal>-1</literal> if a Unix socket is used\n     "
+   },
+   "backend_start": {
+    "type": "timestamp with time zone",
+    "details": "Time when this process was started, i.e., when the\n      client connected to the server\n     "
+   },
+   "xact_start": {
+    "type": "timestamp with time zone",
+    "details": "Time when this process' current transaction was started, or null\n      if no transaction is active. If the current\n      query is the first of its transaction, this column is equal to the\n      <structfield>query_start</structfield> column.\n     "
+   },
+   "query_start": {
+    "type": "timestamp with time zone",
+    "details": "Time when the currently active query was started, or if\n      <structfield>state</structfield> is not <literal>active</literal>, when the last query\n      was started\n     "
+   },
+   "state_change": {
+    "type": "timestamp with time zone",
+    "details": "Time when the <structfield>state</structfield> was last changed"
+   },
+   "wait_event_type": {
+    "type": "text",
+    "details": "The type of event for which the backend is waiting, if any;\n       otherwise NULL. Possible values are:\n       <itemizedlist>        <listitem>         <para>          <literal>LWLockNamed</literal>: The backend is waiting for a specific named\n          lightweight lock.  Each such lock protects a particular data\n          structure in shared memory.  <literal>wait_event</literal> will contain\n          the name of the lightweight lock.\n         </para>\n        </listitem>\n        <listitem>         <para>          <literal>LWLockTranche</literal>: The backend is waiting for one of a\n          group of related lightweight locks.  All locks in the group perform\n          a similar function; <literal>wait_event</literal> will identify the general\n          purpose of locks in that group.\n         </para>\n        </listitem>\n        <listitem>         <para>          <literal>Lock</literal>: The backend is waiting for a heavyweight lock.\n          Heavyweight locks, also known as lock manager locks or simply locks,\n          primarily protect SQL-visible objects such as tables.  However,\n          they are also used to ensure mutual exclusion for certain internal\n          operations such as relation extension.  <literal>wait_event</literal> will\n          identify the type of lock awaited.\n         </para>\n        </listitem>\n        <listitem>         <para>          <literal>BufferPin</literal>: The server process is waiting to access to\n          a data buffer during a period when no other process can be\n          examining that buffer.  Buffer pin waits can be protracted if\n          another process holds an open cursor which last read data from the\n          buffer in question.\n         </para>\n        </listitem>\n       </itemizedlist>\n      "
+   },
+   "wait_event": {
+    "type": "text",
+    "details": "Wait event name if backend is currently waiting, otherwise NULL.\n     See <xref linkend=\"wait-event-table\"> for details.\n     </xref>"
+   },
+   "state": {
+    "type": "text",
+    "details": "Current overall state of this backend.\n       Possible values are:\n       <itemizedlist>         <listitem>          <para>           <literal>active</literal>: The backend is executing a query.\n          </para>\n         </listitem>\n         <listitem>          <para>           <literal>idle</literal>: The backend is waiting for a new client command.\n          </para>\n         </listitem>\n         <listitem>          <para>           <literal>idle in transaction</literal>: The backend is in a transaction,\n           but is not currently executing a query.\n          </para>\n         </listitem>\n         <listitem>          <para>           <literal>idle in transaction (aborted)</literal>: This state is similar to\n           <literal>idle in transaction</literal>, except one of the statements in\n           the transaction caused an error.\n          </para>\n         </listitem>\n         <listitem>          <para>           <literal>fastpath function call</literal>: The backend is executing a\n           fast-path function.\n          </para>\n         </listitem>\n         <listitem>           <para>           <literal>disabled</literal>: This state is reported if <xref linkend=\"guc-track-activities\"> is disabled in this backend.\n          </xref></para>\n         </listitem>\n       </itemizedlist>\n     "
+   },
+   "backend_xid": {
+    "type": "xid",
+    "details": "Top-level transaction identifier of this backend, if any."
+   },
+   "backend_xmin": {
+    "type": "xid",
+    "details": "The current backend's <literal>xmin</literal> horizon."
+   },
+   "query": {
+    "type": "text",
+    "details": "Text of this backend's most recent query. If\n      <structfield>state</structfield> is <literal>active</literal> this field shows the\n      currently executing query. In all other states, it shows the last query\n      that was executed.\n     "
+   }
+  }
+ },
+ "wait-event-table": {
+  "doc": "    <para>     For tranches registered by extensions, the name is specified by extension\n     and this will be displayed as <structfield>wait_event</structfield>.  It is quite\n     possible that user has registered the tranche in one of the backends (by\n     having allocation in dynamic shared memory) in which case other backends\n     won't have that information, so we display <literal>extension</literal> for such\n     cases.\n    </para>\n        Here is an example of how wait events can be viewed\n\n<programlisting>SELECT pid, wait_event_type, wait_event FROM pg_stat_activity WHERE wait_event is NOT NULL;\n pid  | wait_event_type |  wait_event\n------+-----------------+---------------\n 2540 | Lock            | relation\n 6644 | LWLockNamed     | ProcArrayLock\n(2 rows)</programlisting>\n   ",
+  "columns": {}
+ },
+ "pg-stat-replication-view": {
+  "doc": "   The <structname>pg_stat_replication</structname> view will contain one row\n   per WAL sender process, showing statistics about replication to that\n   sender's connected standby server.  Only directly connected standbys are\n   listed; no information is available about downstream standby servers.\n  ",
+  "columns": {
+   "pid": {
+    "type": "integer",
+    "details": "Process ID of a WAL sender process"
+   },
+   "usesysid": {
+    "type": "oid",
+    "details": "OID of the user logged into this WAL sender process"
+   },
+   "usename": {
+    "type": "name",
+    "details": "Name of the user logged into this WAL sender process"
+   },
+   "application_name": {
+    "type": "text",
+    "details": "Name of the application that is connected\n      to this WAL sender"
+   },
+   "client_addr": {
+    "type": "inet",
+    "details": "IP address of the client connected to this WAL sender.\n      If this field is null, it indicates that the client is\n      connected via a Unix socket on the server machine.\n     "
+   },
+   "client_hostname": {
+    "type": "text",
+    "details": "Host name of the connected client, as reported by a\n      reverse DNS lookup of <structfield>client_addr</structfield>. This field will\n      only be non-null for IP connections, and only when <xref linkend=\"guc-log-hostname\"> is enabled.\n     </xref>"
+   },
+   "client_port": {
+    "type": "integer",
+    "details": "TCP port number that the client is using for communication\n      with this WAL sender, or <literal>-1</literal> if a Unix socket is used\n     "
+   },
+   "backend_start": {
+    "type": "timestamp with time zone",
+    "details": "Time when this process was started, i.e., when the\n      client connected to this WAL sender\n     "
+   },
+   "backend_xmin": {
+    "type": "xid",
+    "details": "This standby's <literal>xmin</literal> horizon reported\n     by <xref linkend=\"guc-hot-standby-feedback\">.</xref>"
+   },
+   "state": {
+    "type": "text",
+    "details": "Current WAL sender state"
+   },
+   "sent_location": {
+    "type": "pg_lsn",
+    "details": "Last transaction log position sent on this connection"
+   },
+   "write_location": {
+    "type": "pg_lsn",
+    "details": "Last transaction log position written to disk by this standby\n      server"
+   },
+   "flush_location": {
+    "type": "pg_lsn",
+    "details": "Last transaction log position flushed to disk by this standby\n      server"
+   },
+   "replay_location": {
+    "type": "pg_lsn",
+    "details": "Last transaction log position replayed into the database on this\n      standby server"
+   },
+   "sync_priority": {
+    "type": "integer",
+    "details": "Priority of this standby server for being chosen as the\n      synchronous standby"
+   },
+   "sync_state": {
+    "type": "text",
+    "details": "Synchronous state of this standby server"
+   }
+  }
+ },
+ "pg-stat-wal-receiver-view": {
+  "doc": "   The <structname>pg_stat_wal_receiver</structname> view will contain only\n   one row, showing statistics about the WAL receiver from that receiver's\n   connected server.\n  ",
+  "columns": {
+   "pid": {
+    "type": "integer",
+    "details": "Process ID of the WAL receiver process"
+   },
+   "status": {
+    "type": "text",
+    "details": "Activity status of the WAL receiver process"
+   },
+   "receive_start_lsn": {
+    "type": "pg_lsn",
+    "details": "First transaction log position used when WAL receiver is\n      started"
+   },
+   "receive_start_tli": {
+    "type": "integer",
+    "details": "First timeline number used when WAL receiver is started"
+   },
+   "received_lsn": {
+    "type": "pg_lsn",
+    "details": "Last transaction log position already received and flushed to\n      disk, the initial value of this field being the first log position used\n      when WAL receiver is started"
+   },
+   "received_tli": {
+    "type": "integer",
+    "details": "Timeline number of last transaction log position received and\n      flushed to disk, the initial value of this field being the timeline\n      number of the first log position used when WAL receiver is started\n     "
+   },
+   "last_msg_send_time": {
+    "type": "timestamp with time zone",
+    "details": "Send time of last message received from origin WAL sender"
+   },
+   "last_msg_receipt_time": {
+    "type": "timestamp with time zone",
+    "details": "Receipt time of last message received from origin WAL sender"
+   },
+   "latest_end_lsn": {
+    "type": "pg_lsn",
+    "details": "Last transaction log position reported to origin WAL sender"
+   },
+   "latest_end_time": {
+    "type": "timestamp with time zone",
+    "details": "Time of last transaction log position reported to origin WAL sender"
+   },
+   "slot_name": {
+    "type": "text",
+    "details": "Replication slot name used by this WAL receiver"
+   }
+  }
+ },
+ "pg-stat-ssl-view": {
+  "doc": "   The <structname>pg_stat_ssl</structname> view will contain one row per\n   backend or WAL sender process, showing statistics about SSL usage on\n   this connection. It can be joined to <structname>pg_stat_activity</structname>\n   or <structname>pg_stat_replication</structname> on the\n   <structfield>pid</structfield> column to get more details about the\n   connection.\n  ",
+  "columns": {
+   "pid": {
+    "type": "integer",
+    "details": "Process ID of a backend or WAL sender process"
+   },
+   "ssl": {
+    "type": "boolean",
+    "details": "True if SSL is used on this connection"
+   },
+   "version": {
+    "type": "text",
+    "details": "Version of SSL in use, or NULL if SSL is not in use\n      on this connection"
+   },
+   "cipher": {
+    "type": "text",
+    "details": "Name of SSL cipher in use, or NULL if SSL is not in use\n      on this connection"
+   },
+   "bits": {
+    "type": "integer",
+    "details": "Number of bits in the encryption algorithm used, or NULL\n     if SSL is not used on this connection"
+   },
+   "compression": {
+    "type": "boolean",
+    "details": "True if SSL compression is in use, false if not,\n      or NULL if SSL is not in use on this connection"
+   },
+   "clientdn": {
+    "type": "text",
+    "details": "Distinguished Name (DN) field from the client certificate\n      used, or NULL if no client certificate was supplied or if SSL\n      is not in use on this connection. This field is truncated if the\n      DN field is longer than <symbol>NAMEDATALEN</symbol> (64 characters\n      in a standard build)\n     "
+   }
+  }
+ },
+ "pg-stat-archiver-view": {
+  "doc": "   The <structname>pg_stat_archiver</structname> view will always have a\n   single row, containing data about the archiver process of the cluster.\n  ",
+  "columns": {
+   "archived_count": {
+    "type": "bigint",
+    "details": "Number of WAL files that have been successfully archived"
+   },
+   "last_archived_wal": {
+    "type": "text",
+    "details": "Name of the last WAL file successfully archived"
+   },
+   "last_archived_time": {
+    "type": "timestamp with time zone",
+    "details": "Time of the last successful archive operation"
+   },
+   "failed_count": {
+    "type": "bigint",
+    "details": "Number of failed attempts for archiving WAL files"
+   },
+   "last_failed_wal": {
+    "type": "text",
+    "details": "Name of the WAL file of the last failed archival operation"
+   },
+   "last_failed_time": {
+    "type": "timestamp with time zone",
+    "details": "Time of the last failed archival operation"
+   },
+   "stats_reset": {
+    "type": "timestamp with time zone",
+    "details": "Time at which these statistics were last reset"
+   }
+  }
+ },
+ "pg-stat-bgwriter-view": {
+  "doc": "   The <structname>pg_stat_bgwriter</structname> view will always have a\n   single row, containing global data for the cluster.\n  ",
+  "columns": {
+   "checkpoints_timed": {
+    "type": "bigint",
+    "details": "Number of scheduled checkpoints that have been performed"
+   },
+   "checkpoints_req": {
+    "type": "bigint",
+    "details": "Number of requested checkpoints that have been performed"
+   },
+   "checkpoint_write_time": {
+    "type": "double precision",
+    "details": "        Total amount of time that has been spent in the portion of\n        checkpoint processing where files are written to disk, in milliseconds\n      "
+   },
+   "checkpoint_sync_time": {
+    "type": "double precision",
+    "details": "        Total amount of time that has been spent in the portion of\n        checkpoint processing where files are synchronized to disk, in\n        milliseconds\n      "
+   },
+   "buffers_checkpoint": {
+    "type": "bigint",
+    "details": "Number of buffers written during checkpoints"
+   },
+   "buffers_clean": {
+    "type": "bigint",
+    "details": "Number of buffers written by the background writer"
+   },
+   "maxwritten_clean": {
+    "type": "bigint",
+    "details": "Number of times the background writer stopped a cleaning\n       scan because it had written too many buffers"
+   },
+   "buffers_backend": {
+    "type": "bigint",
+    "details": "Number of buffers written directly by a backend"
+   },
+   "buffers_backend_fsync": {
+    "type": "bigint",
+    "details": "Number of times a backend had to execute its own\n       <function>fsync</function> call (normally the background writer handles those\n       even when the backend does its own write)"
+   },
+   "buffers_alloc": {
+    "type": "bigint",
+    "details": "Number of buffers allocated"
+   },
+   "stats_reset": {
+    "type": "timestamp with time zone",
+    "details": "Time at which these statistics were last reset"
+   }
+  }
+ },
+ "pg-stat-database-view": {
+  "doc": "   The <structname>pg_stat_database</structname> view will contain one row\n   for each database in the cluster, showing database-wide statistics.\n  ",
+  "columns": {
+   "datid": {
+    "type": "oid",
+    "details": "OID of a database"
+   },
+   "datname": {
+    "type": "name",
+    "details": "Name of this database"
+   },
+   "numbackends": {
+    "type": "integer",
+    "details": "Number of backends currently connected to this database.\n     This is the only column in this view that returns a value reflecting\n     current state; all other columns return the accumulated values since\n     the last reset."
+   },
+   "xact_commit": {
+    "type": "bigint",
+    "details": "Number of transactions in this database that have been\n      committed"
+   },
+   "xact_rollback": {
+    "type": "bigint",
+    "details": "Number of transactions in this database that have been\n      rolled back"
+   },
+   "blks_read": {
+    "type": "bigint",
+    "details": "Number of disk blocks read in this database"
+   },
+   "blks_hit": {
+    "type": "bigint",
+    "details": "Number of times disk blocks were found already in the buffer\n      cache, so that a read was not necessary (this only includes hits in the\n      PostgreSQL buffer cache, not the operating system's file system cache)\n     "
+   },
+   "tup_returned": {
+    "type": "bigint",
+    "details": "Number of rows returned by queries in this database"
+   },
+   "tup_fetched": {
+    "type": "bigint",
+    "details": "Number of rows fetched by queries in this database"
+   },
+   "tup_inserted": {
+    "type": "bigint",
+    "details": "Number of rows inserted by queries in this database"
+   },
+   "tup_updated": {
+    "type": "bigint",
+    "details": "Number of rows updated by queries in this database"
+   },
+   "tup_deleted": {
+    "type": "bigint",
+    "details": "Number of rows deleted by queries in this database"
+   },
+   "conflicts": {
+    "type": "bigint",
+    "details": "Number of queries canceled due to conflicts with recovery\n      in this database. (Conflicts occur only on standby servers; see\n      <xref linkend=\"pg-stat-database-conflicts-view\"> for details.)\n     </xref>"
+   },
+   "temp_files": {
+    "type": "bigint",
+    "details": "Number of temporary files created by queries in this database.\n      All temporary files are counted, regardless of why the temporary file\n      was created (e.g., sorting or hashing), and regardless of the\n      <xref linkend=\"guc-log-temp-files\"> setting.\n     </xref>"
+   },
+   "temp_bytes": {
+    "type": "bigint",
+    "details": "Total amount of data written to temporary files by queries in\n      this database. All temporary files are counted, regardless of why\n      the temporary file was created, and\n      regardless of the <xref linkend=\"guc-log-temp-files\"> setting.\n     </xref>"
+   },
+   "deadlocks": {
+    "type": "bigint",
+    "details": "Number of deadlocks detected in this database"
+   },
+   "blk_read_time": {
+    "type": "double precision",
+    "details": "Time spent reading data file blocks by backends in this database,\n      in milliseconds"
+   },
+   "blk_write_time": {
+    "type": "double precision",
+    "details": "Time spent writing data file blocks by backends in this database,\n      in milliseconds"
+   },
+   "stats_reset": {
+    "type": "timestamp with time zone",
+    "details": "Time at which these statistics were last reset"
+   }
+  }
+ },
+ "pg-stat-database-conflicts-view": {
+  "doc": "   The <structname>pg_stat_database_conflicts</structname> view will contain\n   one row per database, showing database-wide statistics about\n   query cancels occurring due to conflicts with recovery on standby servers.\n   This view will only contain information on standby servers, since\n   conflicts do not occur on master servers.\n  ",
+  "columns": {
+   "datid": {
+    "type": "oid",
+    "details": "OID of a database"
+   },
+   "datname": {
+    "type": "name",
+    "details": "Name of this database"
+   },
+   "confl_tablespace": {
+    "type": "bigint",
+    "details": "Number of queries in this database that have been canceled due to\n      dropped tablespaces"
+   },
+   "confl_lock": {
+    "type": "bigint",
+    "details": "Number of queries in this database that have been canceled due to\n      lock timeouts"
+   },
+   "confl_snapshot": {
+    "type": "bigint",
+    "details": "Number of queries in this database that have been canceled due to\n      old snapshots"
+   },
+   "confl_bufferpin": {
+    "type": "bigint",
+    "details": "Number of queries in this database that have been canceled due to\n      pinned buffers"
+   },
+   "confl_deadlock": {
+    "type": "bigint",
+    "details": "Number of queries in this database that have been canceled due to\n      deadlocks"
+   }
+  }
+ },
+ "pg-stat-all-tables-view": {
+  "doc": "   The <structname>pg_stat_all_tables</structname> view will contain\n   one row for each table in the current database (including TOAST\n   tables), showing statistics about accesses to that specific table. The\n   <structname>pg_stat_user_tables</structname> and\n   <structname>pg_stat_sys_tables</structname> views\n   contain the same information,\n   but filtered to only show user and system tables respectively.\n  ",
+  "columns": {
+   "relid": {
+    "type": "oid",
+    "details": "OID of a table"
+   },
+   "schemaname": {
+    "type": "name",
+    "details": "Name of the schema that this table is in"
+   },
+   "relname": {
+    "type": "name",
+    "details": "Name of this table"
+   },
+   "seq_scan": {
+    "type": "bigint",
+    "details": "Number of sequential scans initiated on this table"
+   },
+   "seq_tup_read": {
+    "type": "bigint",
+    "details": "Number of live rows fetched by sequential scans"
+   },
+   "idx_scan": {
+    "type": "bigint",
+    "details": "Number of index scans initiated on this table"
+   },
+   "idx_tup_fetch": {
+    "type": "bigint",
+    "details": "Number of live rows fetched by index scans"
+   },
+   "n_tup_ins": {
+    "type": "bigint",
+    "details": "Number of rows inserted"
+   },
+   "n_tup_upd": {
+    "type": "bigint",
+    "details": "Number of rows updated (includes HOT updated rows)"
+   },
+   "n_tup_del": {
+    "type": "bigint",
+    "details": "Number of rows deleted"
+   },
+   "n_tup_hot_upd": {
+    "type": "bigint",
+    "details": "Number of rows HOT updated (i.e., with no separate index\n      update required)"
+   },
+   "n_live_tup": {
+    "type": "bigint",
+    "details": "Estimated number of live rows"
+   },
+   "n_dead_tup": {
+    "type": "bigint",
+    "details": "Estimated number of dead rows"
+   },
+   "n_mod_since_analyze": {
+    "type": "bigint",
+    "details": "Estimated number of rows modified since this table was last analyzed"
+   },
+   "last_vacuum": {
+    "type": "timestamp with time zone",
+    "details": "Last time at which this table was manually vacuumed\n      (not counting <command>VACUUM FULL</command>)"
+   },
+   "last_autovacuum": {
+    "type": "timestamp with time zone",
+    "details": "Last time at which this table was vacuumed by the autovacuum\n      daemon"
+   },
+   "last_analyze": {
+    "type": "timestamp with time zone",
+    "details": "Last time at which this table was manually analyzed"
+   },
+   "last_autoanalyze": {
+    "type": "timestamp with time zone",
+    "details": "Last time at which this table was analyzed by the autovacuum\n      daemon"
+   },
+   "vacuum_count": {
+    "type": "bigint",
+    "details": "Number of times this table has been manually vacuumed\n      (not counting <command>VACUUM FULL</command>)"
+   },
+   "autovacuum_count": {
+    "type": "bigint",
+    "details": "Number of times this table has been vacuumed by the autovacuum\n      daemon"
+   },
+   "analyze_count": {
+    "type": "bigint",
+    "details": "Number of times this table has been manually analyzed"
+   },
+   "autoanalyze_count": {
+    "type": "bigint",
+    "details": "Number of times this table has been analyzed by the autovacuum\n      daemon"
+   }
+  }
+ },
+ "pg-stat-all-indexes-view": {
+  "doc": "   The <structname>pg_stat_all_indexes</structname> view will contain\n   one row for each index in the current database,\n   showing statistics about accesses to that specific index. The\n   <structname>pg_stat_user_indexes</structname> and\n   <structname>pg_stat_sys_indexes</structname> views\n   contain the same information,\n   but filtered to only show user and system indexes respectively.\n     Indexes can be used by simple index scans, <quote>bitmap</quote> index scans,\n   and the optimizer.  In a bitmap scan\n   the output of several indexes can be combined via AND or OR rules,\n   so it is difficult to associate individual heap row fetches\n   with specific indexes when a bitmap scan is used.  Therefore, a bitmap\n   scan increments the\n   <structname>pg_stat_all_indexes</structname>.<structfield>idx_tup_read</structfield>\n   count(s) for the index(es) it uses, and it increments the\n   <structname>pg_stat_all_tables</structname>.<structfield>idx_tup_fetch</structfield>\n   count for the table, but it does not affect\n   <structname>pg_stat_all_indexes</structname>.<structfield>idx_tup_fetch</structfield>.\n   The optimizer also accesses indexes to check for supplied constants\n   whose values are outside the recorded range of the optimizer statistics\n   because the optimizer statistics might be stale.\n     <para>    The <structfield>idx_tup_read</structfield> and <structfield>idx_tup_fetch</structfield> counts\n    can be different even without any use of bitmap scans,\n    because <structfield>idx_tup_read</structfield> counts\n    index entries retrieved from the index while <structfield>idx_tup_fetch</structfield>\n    counts live rows fetched from the table.  The latter will be less if any\n    dead or not-yet-committed rows are fetched using the index, or if any\n    heap fetches are avoided by means of an index-only scan.\n   </para>\n  ",
+  "columns": {
+   "relid": {
+    "type": "oid",
+    "details": "OID of the table for this index"
+   },
+   "indexrelid": {
+    "type": "oid",
+    "details": "OID of this index"
+   },
+   "schemaname": {
+    "type": "name",
+    "details": "Name of the schema this index is in"
+   },
+   "relname": {
+    "type": "name",
+    "details": "Name of the table for this index"
+   },
+   "indexrelname": {
+    "type": "name",
+    "details": "Name of this index"
+   },
+   "idx_scan": {
+    "type": "bigint",
+    "details": "Number of index scans initiated on this index"
+   },
+   "idx_tup_read": {
+    "type": "bigint",
+    "details": "Number of index entries returned by scans on this index"
+   },
+   "idx_tup_fetch": {
+    "type": "bigint",
+    "details": "Number of live table rows fetched by simple index scans using this\n      index"
+   }
+  }
+ },
+ "pg-statio-all-tables-view": {
+  "doc": "   The <structname>pg_statio_all_tables</structname> view will contain\n   one row for each table in the current database (including TOAST\n   tables), showing statistics about I/O on that specific table. The\n   <structname>pg_statio_user_tables</structname> and\n   <structname>pg_statio_sys_tables</structname> views\n   contain the same information,\n   but filtered to only show user and system tables respectively.\n  ",
+  "columns": {
+   "relid": {
+    "type": "oid",
+    "details": "OID of a table"
+   },
+   "schemaname": {
+    "type": "name",
+    "details": "Name of the schema that this table is in"
+   },
+   "relname": {
+    "type": "name",
+    "details": "Name of this table"
+   },
+   "heap_blks_read": {
+    "type": "bigint",
+    "details": "Number of disk blocks read from this table"
+   },
+   "heap_blks_hit": {
+    "type": "bigint",
+    "details": "Number of buffer hits in this table"
+   },
+   "idx_blks_read": {
+    "type": "bigint",
+    "details": "Number of disk blocks read from all indexes on this table"
+   },
+   "idx_blks_hit": {
+    "type": "bigint",
+    "details": "Number of buffer hits in all indexes on this table"
+   },
+   "toast_blks_read": {
+    "type": "bigint",
+    "details": "Number of disk blocks read from this table's TOAST table (if any)"
+   },
+   "toast_blks_hit": {
+    "type": "bigint",
+    "details": "Number of buffer hits in this table's TOAST table (if any)"
+   },
+   "tidx_blks_read": {
+    "type": "bigint",
+    "details": "Number of disk blocks read from this table's TOAST table indexes (if any)"
+   },
+   "tidx_blks_hit": {
+    "type": "bigint",
+    "details": "Number of buffer hits in this table's TOAST table indexes (if any)"
+   }
+  }
+ },
+ "pg-statio-all-indexes-view": {
+  "doc": "   The <structname>pg_statio_all_indexes</structname> view will contain\n   one row for each index in the current database,\n   showing statistics about I/O on that specific index. The\n   <structname>pg_statio_user_indexes</structname> and\n   <structname>pg_statio_sys_indexes</structname> views\n   contain the same information,\n   but filtered to only show user and system indexes respectively.\n  ",
+  "columns": {
+   "relid": {
+    "type": "oid",
+    "details": "OID of the table for this index"
+   },
+   "indexrelid": {
+    "type": "oid",
+    "details": "OID of this index"
+   },
+   "schemaname": {
+    "type": "name",
+    "details": "Name of the schema this index is in"
+   },
+   "relname": {
+    "type": "name",
+    "details": "Name of the table for this index"
+   },
+   "indexrelname": {
+    "type": "name",
+    "details": "Name of this index"
+   },
+   "idx_blks_read": {
+    "type": "bigint",
+    "details": "Number of disk blocks read from this index"
+   },
+   "idx_blks_hit": {
+    "type": "bigint",
+    "details": "Number of buffer hits in this index"
+   }
+  }
+ },
+ "pg-statio-all-sequences-view": {
+  "doc": "   The <structname>pg_statio_all_sequences</structname> view will contain\n   one row for each sequence in the current database,\n   showing statistics about I/O on that specific sequence.\n  ",
+  "columns": {
+   "relid": {
+    "type": "oid",
+    "details": "OID of a sequence"
+   },
+   "schemaname": {
+    "type": "name",
+    "details": "Name of the schema this sequence is in"
+   },
+   "relname": {
+    "type": "name",
+    "details": "Name of this sequence"
+   },
+   "blks_read": {
+    "type": "bigint",
+    "details": "Number of disk blocks read from this sequence"
+   },
+   "blks_hit": {
+    "type": "bigint",
+    "details": "Number of buffer hits in this sequence"
+   }
+  }
+ },
+ "pg-stat-user-functions-view": {
+  "doc": "   The <structname>pg_stat_user_functions</structname> view will contain\n   one row for each tracked function, showing statistics about executions of\n   that function.  The <xref linkend=\"guc-track-functions\"> parameter\n   controls exactly which functions are tracked.\n  </xref>",
+  "columns": {
+   "funcid": {
+    "type": "oid",
+    "details": "OID of a function"
+   },
+   "schemaname": {
+    "type": "name",
+    "details": "Name of the schema this function is in"
+   },
+   "funcname": {
+    "type": "name",
+    "details": "Name of this function"
+   },
+   "calls": {
+    "type": "bigint",
+    "details": "Number of times this function has been called"
+   },
+   "total_time": {
+    "type": "double precision",
+    "details": "Total time spent in this function and all other functions\n     called by it, in milliseconds"
+   },
+   "self_time": {
+    "type": "double precision",
+    "details": "Total time spent in this function itself, not including\n     other functions called by it, in milliseconds"
+   }
+  }
+ }
+}

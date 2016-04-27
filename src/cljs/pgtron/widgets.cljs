@@ -62,7 +62,7 @@
       :border-radius "4px"
       :width "40em"
       :text-align "left"
-      :z-index 1
+      :z-index 10000
       :$padding [1 2]
       :$color [:black :bg-note]
       :left "-30px"
