@@ -75,12 +75,14 @@ order by i.relname"))
       [:div#table
        (style
         [:#table {:$padding [1 6]}
+         wg/tooltip-style
          [:h3 {:$margin [1 0]
                :border-bottom "1px solid #666"
                :$color :gray}]
          [:span.required {:$color :red}]
          [:#data {:$color [:white :bg-1]
                   :$text [0.8]
+                  :float "left"
                   :vertical-align "top"
                   :clear "both"
                   :$margin [1 0]
@@ -104,10 +106,7 @@ order by i.relname"))
           [:.attr {:display "block"
                    :$padding 0.1}]]])
 
-       (when info
-         [:div.columns.docs
-          [:h3 "Documentation"]
-          [:div {:dangerouslySetInnerHTML #js{:__html info}}]])
+       
        
        [:div.columns
         [:h3 "Columns"]
@@ -124,16 +123,32 @@ order by i.relname"))
          [:tbody
           (for [attr (:items @state)]
             [:tr {:key (.-column_name attr)}
-             [:td (.-column_name attr) (when (.-not_null attr) [:span.required " *"])]
+             [:td (.-column_name attr)
+              (when (.-not_null attr) [:span.required " *"])
+              (when-let [doc (docs/catalog-column-docs tbl (.-column_name attr))]
+                [wg/tooltip "docs" [:div
+                                    [:p {:dangerouslySetInnerHTML #js{:__html (.-ref doc)}}]
+                                    [:p {:dangerouslySetInnerHTML #js{:__html (.-details doc)}}]]])]
              [:td [:span.type (.-type attr)]]
              [:td.nulls
               (when-not (.-not_null attr) (.-null_frac attr))]
              [:td.num (.-correlation attr)]
              [:td.num (.-n_distinct attr)]
              [:td.num (.-avg_width attr)]
-             [:td.text-muted (.-column_default attr)]
-             #_[:td [:pre (.stringify js/JSON attr nil " ")]]])]]
-        ]
+             [:td.text-muted (.-column_default attr)]])]]]
+
+
+       (when info
+         [:div.columns.docs
+          [:h3 "Documentation"]
+          [:div {:dangerouslySetInnerHTML #js{:__html info}}]])
+
+       [:div.columns.docs
+        [:h3 "Columns Size"]
+        [chart/pie {:width 500 :height 220}
+         (map (fn [x] {:label (.-column_name x)
+                       :value (.-avg_width x)})
+              (take 5 (reverse (sort-by #(.-avg_width %) (:items @state)))))]]
 
        [:div.columns
         [:h3 "Indices"]
@@ -143,16 +158,10 @@ order by i.relname"))
            #_[:pre (.stringify js/JSON attr nil " ")]])]
 
 
-       [:div.columns
-        [:h3 "Columns Size"]
-        [chart/pie {:width 500 :height 220}
-         (map (fn [x] {:label (.-column_name x)
-                       :value (.-avg_width x)})
-              (take 5 (reverse (sort-by #(.-avg_width %) (:items @state)))))]]
-
        [:div#data
         [:h3 "Data"]
-        (let [rows (:data @state)
+        [wg/table (:data @state)]
+        #_(let [rows 
               one (first rows)
               keys (and one (.keys js/Object one))]
           [:table.table-condensed

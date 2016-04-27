@@ -36,7 +36,8 @@
         (.connect
          cl
          (fn [err]
-           (when err (.log js/console "Error" err))
+           (when err
+             (.log js/console "Error" err))
            (when (not err)
              (.log js/console sql)
              (.query cl sql

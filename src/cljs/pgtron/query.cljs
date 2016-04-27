@@ -5,6 +5,7 @@
             [pgtron.pg :as pg]
             [cljs.core.async :refer [>! <!]]
             [chloroform.core :as form]
+            [pgtron.widgets :as wg]
             [charty.core :as chart]
             [pgtron.style :refer [style icon]]))
 
@@ -99,6 +100,4 @@ WHERE constraint_type = 'FOREIGN KEY'"}
                            [:h3 "Area Chart:"]
                            [chart/area-chart {:width 1000 :height 400}
                             (map (fn [d] {:x (.-area_x d) :y (.-area_y d)}) rows)]])
-           (for [row rows]
-             [:div {:key (gensym)}
-              [:pre (.stringify js/JSON row nil " ")]])])]])))
+           [wg/table rows]])]])))

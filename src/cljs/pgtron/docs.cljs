@@ -61,41 +61,67 @@
   (get tips key))
 
 
-(def catalogs (.parseFromString
-               (js/DOMParser.)
-               (-> (str (.readFileSync fs (str "docs/catalogs.xml")))
-                   (str/replace #"<title" "<h2")
-                   (str/replace #"</title" "</h2")
-                   (str/replace #"&mdash;" ""))
-               "application/xml"))
+(def catalogs (.parse js/JSON (.readFileSync fs (str "docs/catalogs.json"))))
 
 (defn catalog-docs [name]
   (let [id (str "catalog-" (str/replace  name #"_" "-"))
-        node (.querySelector catalogs (str "#" id))
-        html (and node (.-outerHTML node))]
+        html (aget catalogs id)]
+    (.-doc html)))
 
-    (aset js/window "doc" catalogs)
-    (.log js/console html)
-    html))
 
-(defn prepare-catalogs []
-  (let [xml (.parseFromString
-            (js/DOMParser.)
-            (-> (str (.readFileSync fs (str "docs/catalogs.xml")))
-                (str/replace #"<title" "<h2")
-                (str/replace #"</title" "</h2")
-                (str/replace #"&mdash;" ""))
-            "application/xml")
-        sects (.. xml (querySelectorAll "sect1"))
+(defn catalog-column-docs [name column]
+  (let [id (str "catalog-" (str/replace  name #"_" "-"))
+        info (aget catalogs id)]
+    (when info (aget (aget info "columns") column))))
 
+(defn arraify [x]
+  (.. js/Array -prototype -slice (call x)))
+
+(defn load-catalogs []
+  (.parseFromString (js/DOMParser.)
+                    (-> (str (.readFileSync fs (str "docs/catalogs.xml")))
+                        (str/replace #"<title" "<h2")
+                        (str/replace #"</title" "</h2")
+                        (str/replace #"&mdash;" ""))
+                    "application/xml"))
+
+(defn remove-xml-node [x]
+  (.. x -parentNode (removeChild x)))
+
+(defn get-html [x]
+  (when x (.-innerHTML x)))
+
+(defn sanitize-catalog [x]
+  (let [columns #js{}]
+    (doseq [xs (arraify (.-children x))]
+      (when-let [h2 (.. xs (querySelector "h2"))]
+        (when (re-find  #"Columns$" (.-innerHTML h2))
+          (let [rows (.. xs (querySelectorAll "row"))]
+            (doseq [row (arraify rows)]
+              (let [cols (arraify (.-children row))]
+                (aset columns (get-html (.querySelector row "structfield"))
+                     #js{:type (get-html (.querySelector row "type"))
+                         :ref (get-html (aget cols 2))
+                         :details (get-html (aget cols 3))}))))
+          (remove-xml-node xs))))
+    #js{:doc (.-innerHTML x) :columns columns}))
+
+(defn index-catalogs [xml]
+  (let [sects (arraify (.. xml (querySelectorAll "sect1")))
         data (reduce (fn [acc x]
-                       (aset acc (.-id x) (.outerHTML x))
-                       ) #js{} sects)]
+                       (aset acc (.-id x)
+                             (sanitize-catalog x))
+                       acc) #js{} sects)]
+    data))
 
-  (aset js/window "doc" xml)
-  (.. fs (.writeSync "catalogs.json" (.stringify js/Object data nil " ")))))
+(defn to-json [x] (.stringify js/JSON x nil " "))
 
-(comment
-  (prepare-catalogs)
+(defn persists-catalogs-index [idx]
+  (.. fs (writeFile "docs/catalogs.json" (to-json idx))))
+
+
+(comment 
+  (persists-catalogs-index (index-catalogs (load-catalogs)))
   )
+
 

@@ -13,6 +13,8 @@
            :blue "#6ED0E0"
            :red "#E24D42"
 
+           :bg-note "#FBF7AA"
+
            :txt-gold "#a47e3c"
            :txt-gray "#adafae"
            :txt-muted "#555"
@@ -44,7 +46,7 @@
    [(keyword "::-webkit-scrollbar:hover")
     {:background-color "transparent"} ]
    [(keyword "::-webkit-scrollbar-thumb:horizontal")
-    {:background "rgba(0,0,0,0.2)"
+    {:background "#666"
      :border-radius "100px"
      :background-clip "padding-box"
      :border "2px solid transparent"

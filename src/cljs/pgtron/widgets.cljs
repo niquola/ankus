@@ -43,31 +43,33 @@
                  value
                  (str (.substring value 0 100) "...")))])])]])])
 
+(def tooltip-style
+  [:.tt {:display "inline-block"
+         :margin "0 0.5em"
+         :width "20px"
+         :height "20px"
+         :line-height "20px"
+         :cursor "pointer"
+         :font-size "14px"
+         :position "relative"
+         :text-align "center"
+         :border-radius "20%"
+         :$color :blue}
+    [:.tt-content
+     {:position "absolute"
+      :display "none"
+      :box-shadow "0 0 4px gray"
+      :border-radius "4px"
+      :width "40em"
+      :text-align "left"
+      :z-index 1
+      :$padding [1 2]
+      :$color [:black :bg-note]
+      :left "-30px"
+      :top "30px"}]
+   [:&:hover {:$color [:blue :black]}
+     [:.tt-content {:display "block"}]]])
+
 (defn tooltip [title content]
-  [:span.tt
-   (style [:.tt {:display "inline-block"
-                 :margin "0 0.5em"
-                 :border-radius "50%"
-                 :width "20px"
-                 :height "20px"
-                 :line-height "20px"
-                 :cursor "pointer"
-                 :font-size "14px"
-                 :position "relative"
-                 :text-align "center"
-                 :$color [:white :green]}
-           [:.tt-content
-            {:position "absolute"
-             :display "none"
-             :box-shadow "0 0 4px gray"
-             :border-radius "4px"
-             :width "40em"
-             :text-align "left"
-             :$padding [1 2]
-             :$color [:white :bg-0]
-             :left "-30px"
-             :top "30px"}]
-           [:&:hover {:background-color "green"}
-            [:.tt-content {:display "block"}]]])
-   (icon :question)
+  [:span.tt (icon :question)
    [:div.tt-content content]])
