@@ -85,8 +85,9 @@ order by i.relname"))
                   :clear "both"
                   :$margin [1 0]
                   :$padding [1 2]}]
-         [:.docs {:$width 60}]
          docs/styles
+         [:.docs {:$width 60}
+          #_[:row {:display "none"}]]
          [:.columns {:$color [:white :bg-1]
                      :vertical-align "top"
                      :$margin [0 1 1 0]

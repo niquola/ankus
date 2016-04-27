@@ -6,9 +6,11 @@
 (def styles
   [:.docs
    [:para {:display "block" :$margin [2 0]}]
-   [:indexterm {:$text [1.5 2 :bold]
-                :$margin [1 0]
-                :display "block"}]
+   [:row {:display "table-row"
+          :$text [0.9 1]}
+    [:entry {:display "table-cell"
+             :padding "5px"}]]
+   [:indexterm {:display "none"}]
    [:refsect1 {:display "block" :$margin [2 0]}]
    [:title {:display "block"
             :$text [1.3 2 :bold]
@@ -31,7 +33,7 @@
 
 (defn docs [key]
   (let [fn (str/replace (name key) #"-" "_")]
-    (.readFileSync fs (str "docs/ref/" fn ".sgml"))))
+    (.readFileSync fs (str "docs/ref/" fn ".xml"))))
 
 (def tips {
            :pg_statistic.correlation 
@@ -58,12 +60,42 @@
 (defn tip [key]
   (get tips key))
 
+
 (def catalogs (.parseFromString
                (js/DOMParser.)
-               (.readFileSync fs (str "docs/catalogs.sgml"))
-               "text/html"))
+               (-> (str (.readFileSync fs (str "docs/catalogs.xml")))
+                   (str/replace #"<title" "<h2")
+                   (str/replace #"</title" "</h2")
+                   (str/replace #"&mdash;" ""))
+               "application/xml"))
 
 (defn catalog-docs [name]
   (let [id (str "catalog-" (str/replace  name #"_" "-"))
-        node (.getElementById catalogs id)]
-    (and node (.-innerHTML node))))
+        node (.querySelector catalogs (str "#" id))
+        html (and node (.-outerHTML node))]
+
+    (aset js/window "doc" catalogs)
+    (.log js/console html)
+    html))
+
+(defn prepare-catalogs []
+  (let [xml (.parseFromString
+            (js/DOMParser.)
+            (-> (str (.readFileSync fs (str "docs/catalogs.xml")))
+                (str/replace #"<title" "<h2")
+                (str/replace #"</title" "</h2")
+                (str/replace #"&mdash;" ""))
+            "application/xml")
+        sects (.. xml (querySelectorAll "sect1"))
+
+        data (reduce (fn [acc x]
+                       (aset acc (.-id x) (.outerHTML x))
+                       ) #js{} sects)]
+
+  (aset js/window "doc" xml)
+  (.. fs (.writeSync "catalogs.json" (.stringify js/Object data nil " ")))))
+
+(comment
+  (prepare-catalogs)
+  )
+
