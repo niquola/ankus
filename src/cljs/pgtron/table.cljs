@@ -65,7 +65,8 @@ order by i.relname"))
 
 
 (defn table [db tbl]
-  (let [state (atom {})]
+  (let [state (atom {})
+        info (docs/catalog-docs tbl)]
     (pg/query-assoc db (query-attrs db tbl) state [:items])
     (pg/query-assoc db (query-data db tbl) state [:data])
     (pg/query-assoc db (query-indices db tbl) state [:indices])
@@ -84,6 +85,8 @@ order by i.relname"))
                   :clear "both"
                   :$margin [1 0]
                   :$padding [1 2]}]
+         [:.docs {:$width 60}]
+         docs/styles
          [:.columns {:$color [:white :bg-1]
                      :vertical-align "top"
                      :$margin [0 1 1 0]
@@ -99,6 +102,11 @@ order by i.relname"))
           [:.type {:$color :green}]
           [:.attr {:display "block"
                    :$padding 0.1}]]])
+
+       (when info
+         [:div.columns.docs
+          [:h3 "Documentation"]
+          [:div {:dangerouslySetInnerHTML #js{:__html info}}]])
        
        [:div.columns
         [:h3 "Columns"]

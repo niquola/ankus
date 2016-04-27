@@ -47,18 +47,18 @@ CREATE EXTENSION
                          :flex-basis 0;
                          :outline "1px solid #666"}
                  :.CodeMirror {:height "100%"}]
-                [:#docs {:flex-grow 1
+                [:.docs {:flex-grow 1
                          :flex-basis 0;
                          :border-top "1px solid #666"
                          :$color [:black :white]
                          :$padding [1 2]
-                         :overflow-y "scroll"}
-                 docs/styles]])
+                         :overflow-y "scroll"}]
+                docs/styles])
         [:div#main
          [form/codemirror state [:sql] {:theme "railscasts"
                                         :mode "text/x-sql"
                                         :extraKeys {"Ctrl-Enter" handle}}]]
 
-        [:div#docs [:div {:dangerouslySetInnerHTML #js{:__html (docs/docs (str "create-" object))}}]]]])))
+        [:div.docs [:div {:dangerouslySetInnerHTML #js{:__html (docs/docs (str "create-" object))}}]]]])))
 
 (def routes {[:object] {:GET #'$index}})

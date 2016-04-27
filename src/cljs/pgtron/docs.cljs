@@ -4,12 +4,12 @@
 (def fs (js/require "fs"))
 
 (def styles
-  [:refentry
+  [:.docs
+   [:para {:display "block" :$margin [2 0]}]
    [:indexterm {:$text [1.5 2 :bold]
                 :$margin [1 0]
                 :display "block"}]
-   [:refsect1 {:display "block"
-               :$margin [2 0]}]
+   [:refsect1 {:display "block" :$margin [2 0]}]
    [:title {:display "block"
             :$text [1.3 2 :bold]
             :$margin [1 0]}]
@@ -31,7 +31,7 @@
 
 (defn docs [key]
   (let [fn (str/replace (name key) #"-" "_")]
-    (.readFileSync fs (str "docs/" fn ".sgml"))))
+    (.readFileSync fs (str "docs/ref/" fn ".sgml"))))
 
 (def tips {
            :pg_statistic.correlation 
@@ -57,3 +57,13 @@
 
 (defn tip [key]
   (get tips key))
+
+(def catalogs (.parseFromString
+               (js/DOMParser.)
+               (.readFileSync fs (str "docs/catalogs.sgml"))
+               "text/html"))
+
+(defn catalog-docs [name]
+  (let [id (str "catalog-" (str/replace  name #"_" "-"))
+        node (.getElementById catalogs id)]
+    (and node (.-innerHTML node))))
