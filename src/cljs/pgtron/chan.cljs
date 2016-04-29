@@ -10,7 +10,10 @@
             [reagent.core :as r]
             [pgtron.style :refer [icon style]]))
 
-(defn bind-chan [ch] (fn [ev] (let [q (.. ev -target -value)] (am/go (a/>! ch q)))))
+(defn bind-chan [ch & [cb]]
+  (fn [ev] (let [q (.. ev -target -value)]
+             (when cb (cb q))
+             (am/go (a/>! ch q)))))
 
 (defn bind-query [ch db sql-fn state pth]
   (am/go-loop []
