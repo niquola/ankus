@@ -1,3 +1,0 @@
-[submodule "vendor/honeysql"]
-	path = vendor/honeysql
-	url = https://github.com/MichaelBlume/honeysql.git
