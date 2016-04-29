@@ -5,8 +5,7 @@
     "dependencies": {
         "fs-extra": "0.26.5",
         "pg": "latest",
-        "d3": "latest",
-        "pg-native": "latest"
+        "d3": "latest"
     },
     "devDependencies": {
         "grunt": "0.4.5",

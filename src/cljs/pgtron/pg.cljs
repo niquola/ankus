@@ -54,4 +54,8 @@
       (let [res (<! (exec db sql))]
         (swap! state assoc-in path (proc res))))))
 
-
+(defn query-first-assoc [db sql state path & [proc]]
+  (let [proc (or proc identity)]
+    (go
+      (let [res (<! (exec db sql))]
+        (swap! state assoc-in path (proc (first res)))))))

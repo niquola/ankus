@@ -52,5 +52,4 @@
                 :placeholder "user:password@localhost:5432/postgres"
                 :$required true}]
         #_[:pre (pr-str @form)]
-        [:button.btn.btn-success.btn-lg {:type "submit" :on-click submit} "Connect"]]
-       ]])))
+        [:button.btn.btn-success.btn-lg {:type "submit" :on-click submit} "Connect"]]]])))

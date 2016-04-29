@@ -127,8 +127,21 @@ app.on('ready', function() {
     app.quit();
   });
 
+    var devTools = false;
+  electron.globalShortcut.register('CommandOrControl+X', function() {
+      if(devTools){
+          mainWindow.closeDevTools();
+      }else {
+          mainWindow.openDevTools();
+      }
+      devTools = !devTools;
+  });
+
+
   if (devConfig.hasOwnProperty('dev-tools') && devConfig['dev-tools'] === true) {
     mainWindow.openDevTools();
   }
+  mainWindow.setMenu(null);
+  mainWindow.maximize();
 
 });
