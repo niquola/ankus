@@ -1,0 +1,3 @@
+[submodule "new_honeysql"]
+	path = vendor/honeysql
+	url = https://github.com/MichaelBlume/honeysql.git

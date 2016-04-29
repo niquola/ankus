@@ -2,6 +2,8 @@
   (:require-macros [cljs.core.async.macros :as m :refer [go alt!]])
   (:require [reagent.core :as reagent]
             [cljs.core.async :as async]
+            [clojure.walk :as walk]
+            [honeysql.core :as hsql]
             [pgtron.state :as state]
             [cljs.nodejs :as node]))
 
@@ -11,6 +13,19 @@
 (def Client (.-Client pg))
 
 (def conn "postgres://crudtest:crudtest@localhost/")
+
+
+(def hsql-macros
+  {:$call hsql/call
+   :$raw hsql/raw})
+
+(defn honey-macro [hsql]
+  (walk/postwalk
+   (fn [x]
+     (if-let [macro (and (vector? x) (get hsql-macros (first x)))] 
+       (apply macro (rest x))
+       x))
+   hsql))
 
 (defn raw-exec [conn sql]
   (let [ch (async/chan)
@@ -29,24 +44,27 @@
          (do (async/put! ch {:error err}) (.log js/console "Error" err)))))
     ch))
 
+
 (defn exec [db sql]
-  (.log js/console "EXEC:" (:connection-string @state/state))
-  (let [ch (async/chan)
+  (println "EXEC:" (:connection-string @state/state))
+  (let [sql (if (map? sql) (hsql/format (honey-macro sql) :parameterizer :postgresql) [sql])
+        ch (async/chan)
         cl (Client. (str (:connection-string @state/state) db))]
-        (.connect
-         cl
-         (fn [err]
-           (when err
-             (.log js/console "Error" err))
-           (when (not err)
-             (.log js/console sql)
-             (.query cl sql
-                     (fn [err res]
-                       (if err
-                         (.error js/console err)
-                         (async/put! ch (.-rows res)))
-                       (.end cl))))))
-        ch))
+    (println "SQL:" sql)
+    (.connect
+     cl
+     (fn [err]
+       (when err
+         (.log js/console "Error" err))
+       (when (not err)
+         (.log js/console sql)
+         (.query cl (first sql) (clj->js (rest sql))
+                 (fn [err res]
+                   (if err
+                     (.error js/console err)
+                     (async/put! ch (.-rows res)))
+                   (.end cl))))))
+    ch))
 
 (defn query-assoc [db sql state path & [proc]]
   (let [proc (or proc identity)]
@@ -59,3 +77,10 @@
     (go
       (let [res (<! (exec db sql))]
         (swap! state assoc-in path (proc (first res)))))))
+
+(comment
+  (hsql/format {:select [(hsql/call :json_build_object
+                                    "key"
+                                    {:select [1] :from [:tbl]})] :from [:bar]})
+
+  )

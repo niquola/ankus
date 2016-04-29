@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :source-paths ["src/cljs"]
+  :source-paths ["src/cljs" "vendor/honeysql/src" "vendor/honeysql/test"]
 
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [cljsjs/react "15.0.1-0"]
@@ -26,7 +26,7 @@
 
   :min-lein-version "2.5.3"
 
-  :cljsbuild {:builds {:app {:source-paths ["src/cljs"]
+  :cljsbuild {:builds {:app {:source-paths ["src/cljs" "vendor/honeysql/src" "vendor/honeysql/test"]
                              :compiler {:main "pgtron.core"
                                         :output-to     "app/js/p/app.js"
                                         :output-dir    "app/js/p/out"
@@ -51,7 +51,7 @@
                                                          :main  "pgtron.core"
                                                          :verbose true}
                                               :figwheel {:on-jsload "pgtron.core/mount-root"}}}}
-                   :source-paths ["env/dev/cljs" "env/dev/clj"]
+                   :source-paths ["src/cljs" "vendor/honeysql/src" "vendor/honeysql/test" "env/dev/cljs" "env/dev/clj"]
 
                    :dependencies [[figwheel-sidecar "0.5.2"]
                                   [com.cemerick/piggieback "0.2.1"]]

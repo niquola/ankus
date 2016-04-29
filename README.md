@@ -9,7 +9,7 @@ Here are some principles by design:
   * embeded documentations (context sensitive)
   * do not hide sql (code generators vs forms)
   * interactive documentations
-* Visualize: 
+* Visualize:
   * use graphic tools to visualize your database from schema to data
   * pluggable graphs and visualizations
 * Best practices:
@@ -54,6 +54,8 @@ This will install the node dependencies for the project, along with grunt and bo
 Start the figwheel server:
 
 ```
+git submodule init
+git submodule update
 lein figwheel
 ```
 

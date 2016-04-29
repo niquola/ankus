@@ -2,105 +2,140 @@
   (:require-macros [cljs.core.async.macros :as am])
   (:require [pgtron.layout :as l]
             [charty.core :as chart]
+            [pgtron.chan :as ch]
             [charty.dsl :as dsl]
             [cljs.core.async :as a]
+            [clojure.string :as str]
             [pgtron.pg :as pg]
             [reagent.core :as r]
-            [pgtron.style :refer [style]]))
+            [pgtron.style :refer [icon style]]))
 
+(defn agg-limit [hsql]
+  {:select [[:$call :json_agg :x.*]]
+   :from [[(assoc hsql :limit 30) :x]]})
 
-#_(defn $index [params]
-  (let [state (r/atom {:inc 1 :items []})
-        handle (fn []
-          (let [cur @state]
-            (reset! state {:items (reduce (fn [acc i]
-                                     (.. acc (push #js{:x i :y (.sin js/Math (+ (rand) (/ i 5)))}))
-                                     acc) #js[] (range 100))})))]
-    (handle)
-    (fn []
-      [l/layout {}
-       [:div
-        [:button {:on-click handle} "Update"]
-        (style [:svg [:circle {:fill "#fff"}]
-                [:text {:fill "yellow"}]])
-        [:pre (pr-str @state)]
-        [:h1 "Chart"]
-        [chart/area-chart {:width 800 :height 300} (:items @state)]]])))
+(defn get-kind [k]
+  (get {:tables "r"
+        :views "v"
+        :functions "f"
+        :indices "i"
+        :sequences "S"} k))
 
-#_(def data
-  #js[#js{:graph_source_id "node1" :graph_target_id "node2"}
-      #js{:graph_source_id "node2" :graph_target_id "node2"}
-      #js{:graph_source_id "node3" :graph_target_id "node2"}
-      #js{:graph_source_id "node4" :graph_target_id "node4"}])
+(defn remove-nils [m]
+  (into {} (remove (fn [[k v]] (nil? v)) m)))
 
-#_(defn $index [params]
-  (let [state (r/atom {:inc 1 :items []})]
-    (fn []
-      [l/layout {}
-       [:div [:h1 "Graph"]
-        [chart/force-graph {:width 800 :height 800} data]]])))
+(defn where-fn [col ws]
+  (let [expr (map (fn [w] [:or
+                           [:like col (str "%" w "%")]
+                           [:like :nspname (str "%" w "%")]]) ws)]
 
-#_(def fs (js/require "fs"))
-
-#_(defn read-file [path]
-  (.readFileSync fs path))
-
-#_(def data (.parse js/JSON (read-file "plan.json")))
+    (when-not (empty? expr)
+      (into [:and] expr))))
 
 (defn mk-query [q]
-  (str "
-SELECT json_build_object(
-  'tables', (SELECT json_agg(c.relname) FROM pg_class c WHERE relname ilike '%" q "%' LIMIT 30),
-  'views',  (SELECT json_agg(c.relname) FROM pg_class c WHERE relname ilike '%" q "%' LIMIT 30),
-  'procs',  (SELECT json_agg(DISTINCT c.proname) FROM pg_proc c WHERE proname ilike '%" q "%' LIMIT 30)
-) as result
-"))
+  (println "Query" q)
+  (let [mods (:modifiers q)
 
-(defn bind-chan [ch] (fn [ev] (let [q (.. ev -target -value)] (am/go (a/>! ch q)))))
+        ws (:words q)
 
-(defn bind-query [ch sql-fn state pth]
-  (am/go-loop []
-    (let [q (a/<! ch)]
-      (pg/query-first-assoc "postgres" (sql-fn q) state pth))
-    (recur)))
+        rels (-> {:select [[:c.oid::text :id] [:c.relname :name] [:n.nspname :schema] [:c.relkind :type]]
+                  :from [[:pg_class :c]]
+                  :where (where-fn :c.relname ws)
+                  :join [[:pg_namespace :n] [:= :n.oid :c.relnamespace]]
+                  :order-by [:relname]}
+                 remove-nils)
 
-(defn debounce [in ms]
-  (let [out (a/chan)]
-    (am/go-loop [last-val nil]
-      (let [val (if (nil? last-val) (<! in) last-val)
-            timer (a/timeout ms)
-            [new-val ch] (a/alts! [in timer])]
-        (condp = ch
-          timer (do (a/>! out val) (recur nil))
-          in (recur new-val))))
-        out))
+        procs (-> {:select [[:p.oid::text :id] [:p.proname :name] [:n.nspname :schema] [[:$raw "'function'"] :type]]
+                   :from [[:pg_proc :p]]
+                   :join [[:pg_namespace :n] [:= :n.oid :p.pronamespace]]
+                   :where (where-fn :p.proname ws)
+                   :order-by [:proname]}
+                  remove-nils)
+
+        kinds (reduce (fn [acc [k v]]
+                        (if-let [f (get-kind k)]
+                          (conj acc f)
+                          acc)) [] mods)
+        sql {:select [:x.*]
+             :from [[{:union [rels procs]} :x]]
+             :order-by [:x.name]
+             :limit 30}]
+    (if (empty? kinds)
+      sql
+      (assoc sql :where [:in :x.type kinds]))))
+
+(def modifiers
+  {"\\t" :tables
+   "\\v" :views
+
+   "\\i" :indices
+   "\\S" :sequences
+   "\\f" :functions})
+
+(defn modifier? [x]
+  (get modifiers x))
+
+(defn parse-modifiers [q]
+  (let [ws (filter identity (str/split q #"\s+"))]
+    (reduce
+     (fn [acc w]
+       (if-let [mod (modifier? w)]
+         (update-in acc [:modifiers] assoc mod true)
+         (update-in acc [:words] conj w))
+       ) {:words []} ws)))
+
+(def icons
+  {"v" :eye
+   "r" :table
+   "S" :key
+   "f" :facebook
+   "i" :search})
 
 (defn $index [params]
   (let [model l/model
         q-ch (a/chan)
-        handle (bind-chan q-ch)]
+        handle (ch/bind-chan q-ch)
+        parsed-ch (ch/fmap (ch/debounce q-ch 400) parse-modifiers)
+        query-ch  (ch/fmap parsed-ch (fn [m] (swap! model assoc :query m) m))]
 
-    (bind-query (debounce q-ch 200) mk-query model [:data])
+    #_(am/go-loop []
+      (println "Consume" (a/<! query-ch))
+      (recur))
+
+    (ch/bind-query query-ch "sample"  mk-query model [:data])
+
     (fn []
-      (let [data (or (when-let [d (:data @model)] (.-result d)) #js{})]
+      (let [data (:data @model)
+            query (:query @model)]
         [l/page model
         [:div#demo
          (style [:#demo {:$padding [2 4]}
+                 [:.items {:-webkit-columns 3}]
+                 [:.mod {:display "inline-block"
+                         :$padding [0 1]
+                         :border-radius "5px"
+                         :$margin [0.3 0 0.4]}
+                  [:&.active {:$color [:white :blue]}]]
+                 [:.item {:display "block"
+                          :$color :light-gray
+                          :text-decoration "none"
+                          :$padding [0.2 1]}
+                  [:&:hover {:$color [:white :black]}]
+                  [:.fa {:display "inline-block" :$width 2 :$color :gray}]
+                  [:.schema {:$text [0.5 0.7] :$color :gray}]]
                  [:input {:$color [:black :white] :width "100%" :display "block"}]])
          [:input {:on-change handle}]
+         [:div.mods
+          (for [[k v] modifiers]
+            [:a.mod {:key v
+                     :class (when (get-in query [:modifiers v]) "active")}
+             [:strong (name k)] " " (str v)])]
          [:br]
-         [:h3 "Tables"]
-         (for [i (.-tables data)]
-           [:div {:key i} i])
-
-         [:h3 "Views"]
-         (for [i (.-views data)]
-           [:div {:key i} i])
-
-         [:h3 "Procs"]
-         (for [i (.-procs data)]
-           [:div {:key i} i])
-
+         [:div.items
+          (for [i data]
+            [:a.item {:key (.-id i) :href "#/demo"}
+             (icon (or (get icons (.-type i)) :ups)) " " (.-name i)
+             " "
+             [:span.schema (.-schema i)]])]
+         
          #_[:pre (.stringify js/JSON data nil " ")]]]))))
-
-
