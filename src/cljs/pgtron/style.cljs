@@ -5,7 +5,7 @@
  {:colors {:white "white"
            :violet "#993DC7"
            :gray "gray"
-           :light-gray "#A2A2A2"
+           :light-gray "#ccc"
            :dark-gray "#999"
 
            :black "#090909"
