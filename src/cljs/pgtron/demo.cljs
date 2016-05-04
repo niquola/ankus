@@ -12,24 +12,24 @@
 
 (defn agg-limit [hsql]
   {:select [[:$call :json_agg :x.*]]
-   :from [[(assoc hsql :limit 30) :x]]})
+   :from   [[(assoc hsql :limit 30) :x]]})
 
 (def filters
-  {:tables {:kind "r"
-            :modifier "\\t"
-            :icon :table}
+  {:tables    {:kind "r"
+               :modifier "\\t"
+               :icon :table}
    :schemata  {:kind "s"
                :modifier "\\s"
                :icon :folder-o}
-   :views  {:kind "v"
-            :modifier "\\v"
-            :icon :eye}
+   :views     {:kind "v"
+               :modifier "\\v"
+               :icon :eye}
    :functions {:kind "f"
                :modifier "\\f"
                :icon :facebook}
-   :indices  {:kind "i"
-              :modifier "\\i"
-              :icon :search}
+   :indices   {:kind "i"
+               :modifier "\\i"
+               :icon :search}
    :sequences {:kind "S"
                :modifier "\\S"
                :icon :key}})
@@ -70,19 +70,19 @@
                        [:c.relname :name]
                        [:n.nspname :schema]
                        [:c.relkind :type]]
-                 :from   [[:pg_class :c]]
-                 :where  (where-fn :c.relname ws)
-                 :join   [[:pg_namespace :n] [:= :n.oid :c.relnamespace]]
-                 :order-by [:relname]}
+              :from   [[:pg_class :c]]
+              :where  (where-fn :c.relname ws)
+              :join   [[:pg_namespace :n] [:= :n.oid :c.relnamespace]]
+              :order-by [:relname]}
 
         procs {:select [[:p.oid::text :id]
                         [:p.proname :name]
                         [:n.nspname :schema]
                         [[:$raw "'function'"] :type]]
-                  :from [[:pg_proc :p]]
-                  :join [[:pg_namespace :n] [:= :n.oid :p.pronamespace]]
-                  :where (where-fn :p.proname ws)
-                  :order-by [:proname]}
+               :from [[:pg_proc :p]]
+               :join [[:pg_namespace :n] [:= :n.oid :p.pronamespace]]
+               :where (where-fn :p.proname ws)
+               :order-by [:proname]}
 
         schems {:select [[:nspname :id]
                          [:nspname :name]
