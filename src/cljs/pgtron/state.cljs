@@ -3,7 +3,8 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs.core.async :refer [>! <!]]))
 
-(defonce state (atom {}))
+
+(def state (atom {:tabs []}))
 
 (defn redirect [path]
   (set! (.. js/window -location -hash) path))

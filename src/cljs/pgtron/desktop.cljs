@@ -5,6 +5,7 @@
             [reagent.core :as reagent :refer [atom]]
             [reagent.session :as session]
             [pgtron.layout :as l]
+            [pgtron.index :as index]
             [pgtron.dashboard :as dash]
             [pgtron.database :as db]
             [pgtron.config :as config]
@@ -12,15 +13,13 @@
             [pgtron.query :as query]
             [pgtron.table :as table]
             [pgtron.signin :as signin]
-            [pgtron.demo :as demo]
             [pgtron.create :as create]
             [route-map.core :as rm])
 
   (:import goog.History))
 
 (def routes {:GET #'signin/$index 
-             "dashboard" {:GET #'dash/$index}
-             "demo"  {:GET #'demo/$index}
+             "dashboard" {:GET #'index/$index}
              "config" {:GET #'config/$index}
              "users" {:GET #'users/$index}
              "query" {:GET #'query/$index}

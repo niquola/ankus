@@ -4,39 +4,27 @@
             [pgtron.style :refer [style icon] :as st]
             [reagent.core :as r]))
 
+(defn add-tab [ev]
+  (when (= 13 (.-which ev))
+    (let [id (gensym)]
+      (println ev)
+      (swap! state/state update-in [:tabs] conj {:id id :title (.. ev -target -value)}))))
+
+(defn close-tab [id]
+  (fn [ev]
+    (swap! state/state update-in [:tabs] (fn [old] (remove #(= id (:id %)) old)))))
+
 (defn navigation [glob]
   [:div#nav
    (style [:#nav
-           {:$color [:gray :bg-1]}
-           [:.brand {:display "inline-block"
-                     :$text [1 3 :center]
-                     :$color :green
-                     :$width 6}
-            [:.fa {:$text [1.3 2]}]]
-           [:.db {:$text [1 2]
-                  :$padding [0.25 1]
-                  :$color [:light-gray :bg-0]
-                  :border-radius "3px"
-                  :cursor "pointer"
-                  :border "1px solid #333"}
-            [:.fa {:$text [0.8]}]
-            [:&:hover {:text-decoration "none";
-                       :$color :white}]]
-           [:.item {:display "inline-block"
-                    :$padding 1}
-            [:&:hover {:text-decoration "none"}]
-            [:&.current {:$color :light-gray}]]
-           [:.signout {:float "right"}]
-           [:.logo {:$height 2.5}]])
-
-   [:a.brand {:href "#/dashboard"} [icon :database]]
-
-   (when-let [db (get-in glob [:params :db])]
-     [:a.db {:href (str "#/db/" db)} db " "(icon :chevron-down)])
-   (for [x (or (:bread-crump glob) [])]
-     [:a.item {:key (:title x) :href (:href x) :class (when-not (:href x) "current")}
-      (when-let [ic (:icon x)] (icon ic)) " " (:title x)])
-   [:a.item.signout {:href "#/"} "Sign Out"]])
+           [:.tab {:$color [:white :bg-0] :display "inline-block" :$margin [0 1]
+                   :marging-bottom "-5px"
+                   :$padding [0.5 1]}]])
+   (for [tab (:tabs @state/state)]
+     [:div.tab {:key (:id tab)}
+      (:title tab) " "
+      [:a {:on-click (close-tab (:id tab))} (icon :close)]])
+   [:div.tab [:input.form-control {:on-key-down add-tab}]]])
 
 (defn footer [glob]
   [:div#footer
