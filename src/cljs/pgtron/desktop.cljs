@@ -11,7 +11,7 @@
             [pgtron.config :as config]
             [pgtron.users :as users]
             [pgtron.query :as query]
-            [pgtron.table :as table]
+            [pgtron.tabs :as tabs]
             [pgtron.signin :as signin]
             [pgtron.state :as state]
             [pgtron.create :as create]
@@ -20,7 +20,7 @@
 
   (:import goog.History))
 
-(def routes {:GET #'signin/$index 
+(def routes {:GET #'tabs/$signin 
              "dashboard" {:GET #'index/$index}
              "config" {:GET #'config/$index}
              "users" {:GET #'users/$index}

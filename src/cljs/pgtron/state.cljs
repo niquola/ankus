@@ -5,7 +5,13 @@
             [cljs.core.async :refer [>! <!]]))
 
 
-(def state (atom {:tabs {}}))
+(def state (atom {:current-tab "_new"
+                  :tabs {"_new" {:icon "plus"
+                                 :id "_new"
+                                 :href "/"
+                                 :title "new"
+                                 :no-location true
+                                 :non-removable true}}}))
 
 (defn redirect [path]
   (set! (.. js/window -location -hash) path))

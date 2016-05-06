@@ -3,6 +3,7 @@
   (:require [pgtron.state :as state]
             [cljs.core.async :refer [>! <!]]
             [pgtron.pg :as pg]
+            [chloroform.core :as form]
             [pgtron.style :refer [style icon] :as st]
             [reagent.core :as r]))
 
@@ -33,15 +34,6 @@
     (swap! state/state assoc :current-tab id)
     (aset (.. js/window -location) "hash" (:href @(state/current-tab)))))
 
-(defn- handle-add [scope]
-  (fn [ev]
-    (let [cs (.. ev -target -value)]
-      (when (= 13 (.-which ev))
-        (go (let [res (<! (test-connection cs))]
-              (if (= :success (:status res))
-                (add-tab (str (gensym)) cs)
-                (swap! scope assoc :error (:error res)))))))))
-
 (defn- handle-selection [id]
   (fn [ev] (select-tab id)))
 
@@ -63,39 +55,65 @@
                 {:$color [:light-gray :bg-2]}
                 [:.href  {:$text [0.8 1]
                           :width "100%"
+                          :$color [:black :light-gray]
+                          :border "none"
+                          :$padding 0.5
+                          :box-shadow "none"
                           :display "block"
                           :border-radius 0}]
                 [:.tab {:position "relative"
                         :cursor "pointer"
-                        :display "inline-block" :$margin [0 1]
+                        :display "inline-block" :$margin [0 1 0 0]
                         :z-index 100
                         :$padding [0.1 1]}
                  [:&.active {:$color [:white :black]}]
                  [:.remove [:&:hover {:$color :red}]]
-                 [:input {:$width 40}]
-                 [:.error {:position "absolute"
-                           :$color [:white :red]
-                           :box-shadow "0 0 4px gray"
-                           :display "inline-block"
-                           :border-radius "4px"
-                           :text-align "left"
-                           :z-index 100000
-                           :$padding [1 2]
-                           :left "5px"
-                           :top "50px"}]]])
+                 [:input {:$width 40}]]])
          [:div.tab-list
           (for [tab tabs]
             [:div.tab {:key (str (:id tab))
                        :class (when (= current (:id tab)) "active")
                        :on-click (handle-selection (:id tab))}
+             (when-let [i (:icon tab)] (icon i)) " "
              (:title tab) " "
-             [:span.remove {:on-click (handle-close (:id tab))} (icon :close)]])
-          [:div.tab
-           [:input.form-control {:on-key-down (handle-add scope)
-                                 :on-change bind
-                                 :value (:value @scope)}]
-           (when-let [err (:error @scope)] [:div.error err])]]
+             (when-not (:non-removable tab)
+               [:span.remove {:on-click (handle-close (:id tab))} (icon :close)])])]
          (when-let [current-tab (state/current-tab)]
-           [:input.href {:value (:href @current-tab)
-                         :on-change bind-href
-                         :on-key-down apply-href}])]))))
+           (when-not (:no-location @current-tab)
+             [:input.href {:value (:href @current-tab)
+                           :on-change bind-href
+                           :on-key-down apply-href}]))]))))
+(defn $signin []
+  (let [state (r/atom {})
+        form (form/form-cursor state [:auth] {:connection-string "nicola:nicola@localhost:5432/postgres"})
+        submit (fn [ev]
+                 (let [cs (get-in @form [:data :connection-string])]
+                   (println "cs" cs)
+                   (go (let [res (<! (test-connection cs))]
+                         (if (= :success (:status res))
+                           (add-tab (str (gensym)) cs)
+                           (swap! state assoc :error (:error res)))))))]
+   (fn []
+     [:div#signin
+      (style [:#signin {:display ""
+                        :margin "10% auto"
+                        :$width 70
+                        :$padding [1 2]
+                        :$color [:light-gray :bg-1]}
+              [:label {:display "block"}]
+              [:button {:width "100%"}]
+              [:.connection-string {:$text [1.3 1.6 300]
+                                    :width "100%"
+                                    :$padding [0.5 1]
+                                    :border "2px solid #555"
+                                    :$color [:white :bg-2]}]])
+      [form/form form {:class "form" :on-submit submit}
+       [:$row {:name :connection-string
+               :as :string
+               :class "connection-string"
+               :placeholder "user:password@localhost:5432/postgres"
+               :$required true}]
+       (when-let [err (:error @state)]
+         [:div.alert.alert-dangerous err])
+       #_[:pre (pr-str @form)]
+       [:button.btn.btn-success.btn-lg {:type "submit"} "Connect"]]])))
