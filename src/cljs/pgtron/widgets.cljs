@@ -66,7 +66,8 @@
       :$padding [1 2]
       :$color [:black :bg-note]
       :left "-30px"
-      :top "30px"}]
+      :top "30px"
+      }]
    [:&:hover {:$color [:blue :black]}
      [:.tt-content {:display "block"}]]])
 

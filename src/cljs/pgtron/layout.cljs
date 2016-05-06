@@ -1,30 +1,9 @@
 (ns pgtron.layout
   (:require [gardner.core :as css]
             [pgtron.state :as state]
+            [pgtron.tabs :as tabs]
             [pgtron.style :refer [style icon] :as st]
             [reagent.core :as r]))
-
-(defn add-tab [ev]
-  (when (= 13 (.-which ev))
-    (let [id (gensym)]
-      (println ev)
-      (swap! state/state update-in [:tabs] conj {:id id :title (.. ev -target -value)}))))
-
-(defn close-tab [id]
-  (fn [ev]
-    (swap! state/state update-in [:tabs] (fn [old] (remove #(= id (:id %)) old)))))
-
-(defn navigation [glob]
-  [:div#nav
-   (style [:#nav
-           [:.tab {:$color [:white :bg-0] :display "inline-block" :$margin [0 1]
-                   :marging-bottom "-5px"
-                   :$padding [0.5 1]}]])
-   (for [tab (:tabs @state/state)]
-     [:div.tab {:key (:id tab)}
-      (:title tab) " "
-      [:a {:on-click (close-tab (:id tab))} (icon :close)]])
-   [:div.tab [:input.form-control {:on-key-down add-tab}]]])
 
 (defn footer [glob]
   [:div#footer
@@ -41,16 +20,15 @@
    (style
     [:#layout {:position "absolute" :top 0 :left 0 :right 0 :bottom 0 :overflow "hidden"}
      [:#nav {:position "absolute"
-             :top 0 :left 0 :right 0 :$height 3
+             :top 0 :left 0 :right 0 :$height 5 
              :box-shadow "0 1px 3px #090909, 0 1px 2px #111"
              :z-index 1000}]
      [:#center {:position "absolute"
                 :$padding 0 ;;[1 4 1 6]
-                :$top 3 :left 0 :right 0 :$bottom 2
+                :$top 5 :left 0 :right 0 :$bottom 2
                 :overflow-x "auto"}]
      [:#footer {:position "absolute" :$height 2 :left 0 :right 0 :bottom 0}]])
-   (when-not (:hide-menu glob)
-     [navigation glob])
+   [tabs/tabs]
    [:div#center cnt]
    [footer glob]])
 
