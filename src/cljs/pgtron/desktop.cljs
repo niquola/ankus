@@ -28,7 +28,7 @@
              "new"   #'create/routes
              "db"    #'db/routes})
 
-(defn not-found [path] [:h1 (str "Page " path " not found")])
+(defn not-found [path] )
 
 (defn hook-browser-navigation! []
   (doto (History. false nil (.getElementById js/document "_hx"))
@@ -38,18 +38,17 @@
                        (swap! tab assoc :href (.-token event)))
                      )) (.setEnabled true)))
 
-(defn test-cmp [tab-id]
-  [:h1 tab-id])
-
 (defn root []
   (fn []
     [l/layout
      (when-let [tab-id (:current-tab @state/state)]
-       (let [current-tab (get-in @state/state [:tabs tab-id])]
+       (let [current-tab (get-in @state/state [:tabs tab-id])
+             href (:href current-tab)]
          [:div
-          (when-let [m (rm/match [:GET (:href current-tab)] routes)]
+          (if-let [m (rm/match [:GET href] routes)]
             [:div {:key tab-id}
-             [(:match m) (r/cursor state/state [:tabs tab-id]) (:params m)]])]))]))
+             [(:match m) (r/cursor state/state [:tabs tab-id]) (:params m)]]
+            [:h1 (str " Page " href " not found")])]))]))
 
 (defn mount-root []
   (reagent/render [root] (.getElementById js/document "app")))

@@ -53,15 +53,14 @@
         [:div#tabs
         (style [:#tabs {:$color [:light-gray :bg-1] :padding-top "4px"}
                 [:.location {:$color [:white :bg-0]
-                             :$padding 0.2}
+                             :$padding [0.1 0.2]}
                  [:.href  {:$text [0.8 1]
                            :$margin [0.3 1]
-                           :$color [:white :bg-1]
+                           :$color [:light-gray :bg-1]
                            :border "none"
                            :width "97%"
                            :$padding [0.2 1]
                            :box-shadow "none"
-                           :border-radius "4px"
                            :display "block"}]]
                 [:.tab {:position "relative"
                         :cursor "pointer"
