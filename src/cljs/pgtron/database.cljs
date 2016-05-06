@@ -278,8 +278,8 @@
    "query" {:GET #'query/$index}
    "schema" {[:schema] {:GET #'$schema
                         "table" {[:table] {:GET #'table/$index}}
-                        "proc" {[:proc]   {:GET #'proc/$index}}
-                        "view" {[:view]   {:GET #'view/$index}}}}
+                        "proc"  {[:proc]   {:GET #'proc/$index}}
+                        "view"  {[:view]   {:GET #'view/$index}}}}
 
    "tbl" {[:tbl] {:GET #'table/$index}}
    "new" #'create/routes})

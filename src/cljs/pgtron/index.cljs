@@ -77,7 +77,7 @@
                         {:select [[:p.oid::text :id]
                                   [:p.proname :name]
                                   [:n.nspname :schema]
-                                  [[:$raw "'function'"] :type]]
+                                  [[:$raw "'f'"] :type]]
                          :from [[:pg_proc :p]]
                          :join [[:pg_namespace :n] [:= :n.oid :p.pronamespace]]
                          :where (where-fn :p.proname ws)
@@ -179,7 +179,15 @@
    [:input {:$color [:black :white] :width "100%" :display "block"}]])
 
 
-(defn url [i] (str "#/" (.stringify js/JSON i)))
+(defn url [i]
+  (let [tp (.-type i)]
+    (println "Navigate to " tp)
+    (cond
+      (= "r" tp) (str "#/db/schema/" (.-schema i) "/table/" (.-name i))
+      (= "v" tp) (str "#/db/schema/" (.-schema i) "/view/" (.-name i))
+      (= "s" tp) (str "#/db/schema/" (.-name i))
+      (= "f" tp) (str "#/db/schema/" (.-schema i) "/proc/" (.-name i))
+      :else nil)))
 
 (defn $index [model params]
   (let [input-ch (a/chan)
@@ -187,13 +195,23 @@
         handle (ch/bind-chan input-ch (fn [q]
                                         (swap! model assoc :selection 1)
                                         (swap! model assoc :search q)))
+
+        navigate-to (fn [row-num]
+                      (println row-num)
+                      (when-let [item (first (filter #(= (str row-num) (.-row_number %)) (:data @model)))]
+                        (println item)
+                        (aset (.. js/window -location) "hash" (url item)))
+                      row-num)
+
         navigate (fn [ev]
                    (swap! model update-in [:selection]
                           (fn [old]
                             (if old
-                              (cond (= 38 (.-which ev)) (- old 1)
-                                    (= 40 (.-which ev)) (+ old 1)
-                                    :else old)
+                              (let [which (.-which ev)]
+                                (cond (= 38 which) (- old 1)
+                                      (= 40 which) (+ old 1)
+                                      (= 13 which) (navigate-to old)
+                                     :else old))
                               1))))
         set-modifier (fn [m k]
                        (fn [ev]
@@ -234,7 +252,4 @@
                       :title (url i)
                       :class (when (= (.-row_number i) (str selection)) "selected")}
              (icon (or (get icons (.-type i)) :ups))
-             [:div.title
-              (.-name i)
-              " "
-              [:span.schema (.-schema i)]]])]]))))
+             [:div.title (.-name i) " " [:span.schema (.-schema i)]]])]]))))

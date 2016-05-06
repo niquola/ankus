@@ -2,7 +2,6 @@
   (:require-macros [cljs.core.async.macros :as m :refer [go alt!]])
   (:require [reagent.core :as reagent :refer [atom]]
             [clojure.string :as str]
-            [pgtron.layout :as l]
             [pgtron.pg :as pg]
             [pgtron.docs :as docs]
             [pgtron.widgets :as wg]
@@ -10,7 +9,7 @@
             [cljs.core.async :refer [>! <!]]
             [pgtron.style :refer [style icon]]))
 
-(defn query-attrs [db tbl]
+(defn query-attrs [tbl]
   (str
 "SELECT
 a.attname as column_name,
@@ -39,7 +38,7 @@ WHERE NOT a.attisdropped
 AND a.attnum > 0
  AND t.relname = '" tbl "'"))
 
-(defn query-indices [db tbl]
+(defn query-indices [tbl]
   (str "select i.relname as index_name,
      --  a.attname as column_name,
        pg_get_indexdef(i.oid) as define
@@ -57,10 +56,10 @@ where t.oid = ix.indrelid
   and t.relname  = '" tbl "'
 order by i.relname"))
 
-(defn query-data [db tbl]
+(defn query-data [tbl]
   (str "SELECT *  FROM " tbl " LIMIT 50"))
 
-(defn query-stats [db tbl]
+(defn query-stats [tbl]
   (str "SELECT *  FROM pg_stats WHERE tablename = '" tbl "'"))
 
 
@@ -93,13 +92,13 @@ order by i.relname"))
        [:td.num (.-avg_width attr)]
        [:td.text-muted (.-column_default attr)]])]]])
 
-(defn table [db tbl]
+(defn table [scope tbl]
   (let [state (atom {})
         info (docs/catalog-docs tbl)]
-    (pg/query-assoc db (query-attrs db tbl) state [:items])
-    (pg/query-assoc db (query-data db tbl) state [:data])
-    (pg/query-assoc db (query-indices db tbl) state [:indices])
-    (pg/query-assoc db (query-stats db tbl) state [:stats])
+    (pg/query-assoc (query-attrs tbl) state [:items])
+    (pg/query-assoc (query-data tbl) state [:data])
+    (pg/query-assoc (query-indices tbl) state [:indices])
+    (pg/query-assoc (query-stats tbl) state [:stats])
     (fn []
       [:div#table
        (style
@@ -117,8 +116,7 @@ order by i.relname"))
                   :$margin [1 0]
                   :$padding [1 2]}]
          docs/styles
-         [:.docs {:$width 60}
-          #_[:row {:display "none"}]]
+         [:.docs {:$width 60}]
          wg/block-style
          [:.block 
           [:td.num {:text-align "right" :$color :blue}]
@@ -149,7 +147,8 @@ order by i.relname"))
 
        (wg/block "Data" [wg/table (:data @state)])])))
 
-(defn $index [{db :db sch :schema tbl :table :as params}]
-  [:div#database
-   (style [:#database {}])
-   [table db tbl]])
+(defn $index [scope params]
+  (fn [scope {sch :schema tbl :table :as params}]
+    [:div#database
+     (style [:#database {}])
+     [table scope tbl]]))

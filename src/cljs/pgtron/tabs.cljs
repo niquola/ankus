@@ -53,15 +53,16 @@
         [:div#tabs
         (style [:#tabs {:$color [:light-gray :bg-1] :padding-top "4px"}
                 [:.location {:$color [:white :bg-0]
-                             :$padding [0.1 0.2]}
+                             :border-bottom "1px solid #222"
+                             :$padding [0.1 1]}
                  [:.href  {:$text [0.8 1]
                            :$margin [0.3 1]
                            :$color [:light-gray :bg-1]
                            :border "none"
-                           :width "97%"
+                           :width "80%"
                            :$padding [0.2 1]
                            :box-shadow "none"
-                           :display "block"}]]
+                           :display "inline-block"}]]
                 [:.tab {:position "relative"
                         :cursor "pointer"
                         :display "inline-block"
@@ -88,6 +89,7 @@
          (when-let [current-tab (state/current-tab)]
            (when-not (:no-location @current-tab)
              [:div.location
+              [:a {:href "#/dashboard" :title "Hot Key: CTRL-H"} (icon :home)]
               [:input.href {:value (:href @current-tab)
                             :on-change bind-href
                             :on-key-down apply-href}]]))]))))

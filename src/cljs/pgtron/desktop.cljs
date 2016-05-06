@@ -28,6 +28,8 @@
              "new"   #'create/routes
              "db"    #'db/routes})
 
+(def electron (js/require "electron"))
+
 (defn not-found [path] )
 
 (defn hook-browser-navigation! []
@@ -55,4 +57,5 @@
 
 (defn init! []
   (hook-browser-navigation!)
-  (mount-root))
+  (mount-root)
+  (.. electron -ipcRenderer (on "home" (fn [& args] (aset (.. js/window -location) "href" "#/dashboard")))))

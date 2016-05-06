@@ -13,7 +13,7 @@
 (defn sql [sch vw]
   (str "SELECT pg_get_viewdef('" sch "." vw "', true) as define"))
 
-(defn query-attrs [db tbl]
+(defn query-attrs [tbl]
   (str
    "SELECT
 a.attname as column_name,
@@ -44,15 +44,15 @@ AND a.attnum > 0 AND t.relname = '" tbl "'"))
                               [:p {:dangerouslySetInnerHTML #js{:__html (.-details doc)}}]]])]
        [:td [:span.type (.-type attr)]]])]]])
 
-(defn $index [{db :db sch :schema vw :view :as params}]
+(defn $index [scope {sch :schema vw :view :as params}]
   (let [state (atom {})
         info (docs/view-docs vw)]
 
-    (pg/query-assoc db (str "SELECT * FROM " sch "." vw " LIMIT 20") state [:data])
+    (pg/query-assoc (str "SELECT * FROM " sch "." vw " LIMIT 20") state [:data])
 
-    (pg/query-assoc db (query-attrs db vw) state [:attrs])
+    (pg/query-assoc (query-attrs vw) state [:attrs])
 
-    (pg/query-assoc db (sql sch vw) state [:define]
+    (pg/query-assoc (sql sch vw) state [:define]
                     (fn [xs]
                       (when-let [row (first xs)] (.-define row))))
 
