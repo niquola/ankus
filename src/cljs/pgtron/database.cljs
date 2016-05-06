@@ -38,41 +38,41 @@
    ORDER BY schema_name
   ")
 
-(defn extensions [db]
+(defn extensions []
   (let [state (atom {})]
-    (pg/query-assoc db extensions-query state [:items])
+    (pg/query-assoc extensions-query state [:items])
     (fn []
       [:div#extensions
        [:h4 "Extesions"]
        [:div.section
         [:div.box.new {:key "new"}
-         [:a {:href (str  "#/db/" db "/new/extension")}
+         [:a {:href (str  "#/new/extension")}
           [:h3 (icon :plus) "New extension"]]]
         (for [tbl (:items @state)]
           [:div.box {:key (.stringify js/JSON tbl nil " ")}
            [:h3 (.-extname tbl) " " (.-extversion tbl)]
            #_[:pre (.stringify js/JSON tbl nil " ")]])]])))
 
-(defn schemas [db]
+(defn schemas []
   (let [state (atom {})]
-    (pg/query-assoc db schema-sql state [:items])
+    (pg/query-assoc schema-sql state [:items])
     (fn []
       [:div#schemas
        [:h4 "Schemata"]
        [:div.section
         [:div.box.new {:key "new"}
-         [:a {:href (str  "#/db/" db "/new/schema")}
+         [:a {:href (str  "#/db/new/schema")}
           [:h3 (icon :plus)]
           [:div.details "Create Schema"]]]
         (for [tbl (:items @state)]
           [:a.box {:key (.stringify js/JSON tbl nil " ")
-                   :href (str "#/db/" db "/schema/" (.-schema_name tbl))}
+                   :href (str "#/db/schema/" (.-schema_name tbl))}
            [:h3 (.-schema_name tbl)]
            [:div.details
             [:span (.-tables_count tbl) " tables; "]
             [:span (.-views_count tbl) " views; "]]])]])))
 
-(defn *tables [db state]
+(defn *tables [state]
   (go (let [res (<! (pg/exec tables-query))]
       (swap! state assoc :items
              (->> res
@@ -80,9 +80,9 @@
                   (map (fn [[k v]] [k (sort-by #(.-tablename %)  v)]))
                   (into {}))))))
 
-(defn tables [db]
+(defn tables []
   (let [state (atom {})]
-    (*tables db state)
+    (*tables state)
     (fn []
       [:div#tables
        (style
@@ -106,14 +106,14 @@
           [:div.section
            (for [tbl tbls]
              [:div.tbl {:key (.-tablename tbl)}
-              [:a.label {:href (str "#/db/" db "/tbl/" (.-tablename tbl))} (.-tablename tbl)]
+              [:a.label {:href (str "#/db/table/" (.-tablename tbl))} (.-tablename tbl)]
               [:div.details
                [:span.user [:a {:href (str  "#/users" (.-tableowner tbl))} "@" (.-tableowner tbl) " "]]
                "~" (.-reltuples tbl) " rows; "
                (.-size tbl)]
               #_[:pre (.stringify js/JSON tbl nil " ")]])]])])))
 
-(defn $index [{db :db :as params}]
+(defn $index [scope params]
   [:div#database
    (style [:#database
            {:$padding [1 2]}
@@ -162,9 +162,9 @@
      [icon :search]
      [:h2 "Queries"]]]
 
-   [extensions db]
-   [schemas db]
-   [tables db]])
+   [extensions]
+   [schemas]
+   [tables]])
 
 (defn tables-sql [sch]
   (str 
@@ -224,9 +224,9 @@
                   :class (when (.-hidden tbl) "hide")}
          [:span (icon ic) " " (.-display tbl)]])]]))
 
-(defn $schema [{db :db sch :schema :as params}]
+(defn $schema [scope {sch :schema :as params}]
   (let [state (atom {:search "" :tables [] :views [] :procs []})
-        href (fn [tp id] (str "#/db/" db "/schema/" sch "/" tp "/" id))
+        href (fn [tp id] (str "#/db/schema/" sch "/" tp "/" id))
         handle (fn [ev]
                  (let [q (.. ev -target -value)]
                    (pg/query-assoc (procs-sql sch q)  state [:procs])
