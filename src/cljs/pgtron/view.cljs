@@ -57,27 +57,23 @@ AND a.attnum > 0 AND t.relname = '" tbl "'"))
                       (when-let [row (first xs)] (.-define row))))
 
     (fn []
-      [l/layout {:params params
-                 :bread-crump [{:title [:span (icon :folder-o) " " sch]
-                                :href (str "#/db/" db "/schema/" sch)}
-                               {:title [:span (icon :eye) " " vw]}]}
-       [:div#view
-        (style [:#view {:$padding [1 2]}
-                [:.docs {:$width [60]}]
-                wg/tooltip-style
-                wg/block-style
-                [:.type {:$color :green}]
-                [:.CodeMirror {:height "auto"}]])
+      [:div#view
+       (style [:#view {:$padding [1 2]}
+               [:.docs {:$width [60]}]
+               wg/tooltip-style
+               wg/block-style
+               [:.type {:$color :green}]
+               [:.CodeMirror {:height "auto"}]])
 
-        (when info
-          (wg/block "Documentation"
-                    [:div.docs {:dangerouslySetInnerHTML #js{:__html info}}]))
+       (when info
+         (wg/block "Documentation"
+                   [:div.docs {:dangerouslySetInnerHTML #js{:__html info}}]))
 
-        (wg/block "Columns" [attributes vw (:attrs @state)])
+       (wg/block "Columns" [attributes vw (:attrs @state)])
 
-        (wg/block "Definition"
-         [form/codemirror state [:define] {:theme "railscasts"
-                                           :mode "text/x-sql"
-                                           :extraKeys {"Ctrl-Enter" println}}])
+       (wg/block "Definition"
+                 [form/codemirror state [:define] {:theme "railscasts"
+                                                   :mode "text/x-sql"
+                                                   :extraKeys {"Ctrl-Enter" println}}])
 
-        (wg/block "Data" [wg/table (:data @state)])]])))
+       (wg/block "Data" [wg/table (:data @state)])])))

@@ -1,7 +1,6 @@
 (ns pgtron.database
   (:require-macros [cljs.core.async.macros :as m :refer [go alt!]])
   (:require [reagent.core :as r :refer [atom]]
-            [pgtron.layout :as l]
             [pgtron.pg :as pg]
 
             [pgtron.table :as table]
@@ -115,29 +114,28 @@
               #_[:pre (.stringify js/JSON tbl nil " ")]])]])])))
 
 (defn $index [{db :db :as params}]
-  [l/layout {:params params :bread-crump []}
-   [:div#database
-    (style [:#database
-            {:$padding [1 2]}
-            [:.section {:$margin [0 0 0 2]}]
-            [:.box {:display "inline-block"
-                    :border-top "6px solid #777"
-                    :$width 25
-                    :vertical-align "top"
-                    :$margin 0.5
-                    :$color [:light-gray :bg-1]
-                    :$padding [0.5 1]}
-             [:&:hover {:text-decoration "none"
-                        :$color :white
-                        :border-top "6px solid white"}
-              [:h3 {:$color :white}]]
-             [:.details {:$text [0.8 1 :center] :$padding 0.5}]
-             [:&.new [:h3 {:$color :blue}]]
-             [:h3 {:$color :light-gray
-                   :$text [1 1.2 :center]}
-              [:.fa {:$text [1.2 1.2 :bold] :$padding [0 1]}]]]
+  [:div#database
+   (style [:#database
+           {:$padding [1 2]}
+           [:.section {:$margin [0 0 0 2]}]
+           [:.box {:display "inline-block"
+                   :border-top "6px solid #777"
+                   :$width 25
+                   :vertical-align "top"
+                   :$margin 0.5
+                   :$color [:light-gray :bg-1]
+                   :$padding [0.5 1]}
+            [:&:hover {:text-decoration "none"
+                       :$color :white
+                       :border-top "6px solid white"}
+             [:h3 {:$color :white}]]
+            [:.details {:$text [0.8 1 :center] :$padding 0.5}]
+            [:&.new [:h3 {:$color :blue}]]
+            [:h3 {:$color :light-gray
+                  :$text [1 1.2 :center]}
+             [:.fa {:$text [1.2 1.2 :bold] :$padding [0 1]}]]]
 
-            [:.tbox {:display "inline-block"
+           [:.tbox {:display "inline-block"
                     :$padding [1 3]
                     :vertical-align "top"
                     :$width 18 
@@ -145,28 +143,28 @@
                     :$margin 0.5
                     :border-top "6px solid #777"
                     :$color [:white :bg-1]}
-             [:&:hover
-              {:text-decoration "none"
-               :border-top "6px solid white"}
-              [:.fa {:$color :white}]
-              [:h2 {:$color :white}]]
-             [:.fa {:$text [2.5 2.5 :center]
-                    :$color :light-gray
-                    :display "block"}]
-             [:h2 {:$text [1 1.5 :center]
+            [:&:hover
+             {:text-decoration "none"
+              :border-top "6px solid white"}
+             [:.fa {:$color :white}]
+             [:h2 {:$color :white}]]
+            [:.fa {:$text [2.5 2.5 :center]
                    :$color :light-gray
-                   :$margin [0.5 0]}]
-             [:.details {:$text [0.8 1 :center]}]
-             [:&.template {:border-top "6px solid #777"}]]])
+                   :display "block"}]
+            [:h2 {:$text [1 1.5 :center]
+                  :$color :light-gray
+                  :$margin [0.5 0]}]
+            [:.details {:$text [0.8 1 :center]}]
+            [:&.template {:border-top "6px solid #777"}]]])
 
-    [:div.section
-     [:a.tbox {:href (str "#/db/" db "/query")}
-      [icon :search]
-      [:h2 "Queries"]]]
+   [:div.section
+    [:a.tbox {:href (str "#/db/" db "/query")}
+     [icon :search]
+     [:h2 "Queries"]]]
 
-    [extensions db]
-    [schemas db]
-    [tables db]]])
+   [extensions db]
+   [schemas db]
+   [tables db]])
 
 (defn tables-sql [sch]
   (str 
@@ -241,39 +239,38 @@
     (pg/query-assoc db (views-sql sch)  state [:views])
     (pg/query-assoc db (procs-sql sch "")  state [:procs])
     (fn []
-      [l/layout {:params params :bread-crump [{:title [:span (icon :folder-o) " " sch]}]}
-       [:div#schema
-        (style [:#schema {:$padding [1 2]}
-                [:h3 {:margin [2 0] :$text [0.9 1.5 :bold]
-                      :color :gray
-                      :border-bottom "1px solid #555"}]
-                [:.hide {:display "none"}]
-                [:.search [:input {:$text [1.1 2] :$padding 1}]]
-                [:.col {:display "inline-block"
-                        :vertical-align "top"
-                        :$margin [0 1 1 0]}
-                 [:&.table [:.fa {:$color :blue}]]
-                 [:&.eye [:.fa {:$color :green}]]
-                 [:&.facebook [:.fa {:$color :orange}]]
-                 [:.item {:$padding [0.25 1]
-                          :display "inline-block"
-                          :$color :light-gray
-                          :cursor "pointer"
-                          :$text [1 1]
-                          :$width 40}
-                  [:&:hover {:$color [:white :black]
-                             :text-decoration "none"}]
-                  [:.fa {:$text [0.8 1]}]]]])
-        [:div.search
-         [:input.form-control {:placeholder "Search" :on-change handle}]]
-        [:br]
-        [:div#data
-         [chart/pie {:width 800 :height 200}
-          (map (fn [x] {:label (str (.-tablename x) " (" (.-size x) ")") :value (.-raw_size x)})
-               (take 5 (sort-by #(- (.-raw_size %)) (:tables @state))))]
-         (schema-items "Tables" :table (:tables @state) #(href "table" (.-display %)))
-         (schema-items "Views" :eye (:views @state) #(href "view" (.-display %)))
-         (schema-items "Functions" :facebook (:procs @state) #(href "proc" (.-display %)))]]])))
+      [:div#schema
+       (style [:#schema {:$padding [1 2]}
+               [:h3 {:margin [2 0] :$text [0.9 1.5 :bold]
+                     :color :gray
+                     :border-bottom "1px solid #555"}]
+               [:.hide {:display "none"}]
+               [:.search [:input {:$text [1.1 2] :$padding 1}]]
+               [:.col {:display "inline-block"
+                       :vertical-align "top"
+                       :$margin [0 1 1 0]}
+                [:&.table [:.fa {:$color :blue}]]
+                [:&.eye [:.fa {:$color :green}]]
+                [:&.facebook [:.fa {:$color :orange}]]
+                [:.item {:$padding [0.25 1]
+                         :display "inline-block"
+                         :$color :light-gray
+                         :cursor "pointer"
+                         :$text [1 1]
+                         :$width 40}
+                 [:&:hover {:$color [:white :black]
+                            :text-decoration "none"}]
+                 [:.fa {:$text [0.8 1]}]]]])
+       [:div.search
+        [:input.form-control {:placeholder "Search" :on-change handle}]]
+       [:br]
+       [:div#data
+        [chart/pie {:width 800 :height 200}
+         (map (fn [x] {:label (str (.-tablename x) " (" (.-size x) ")") :value (.-raw_size x)})
+              (take 5 (sort-by #(- (.-raw_size %)) (:tables @state))))]
+        (schema-items "Tables" :table (:tables @state) #(href "table" (.-display %)))
+        (schema-items "Views" :eye (:views @state) #(href "view" (.-display %)))
+        (schema-items "Functions" :facebook (:procs @state) #(href "proc" (.-display %)))]])))
 
 
 (def routes

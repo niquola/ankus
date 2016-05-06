@@ -127,8 +127,6 @@ order by i.relname"))
           [:.attr {:display "block"
                    :$padding 0.1}]]])
 
-       
-       
        (wg/block "Columns" [attributes tbl (:items @state)])
 
 
@@ -152,10 +150,6 @@ order by i.relname"))
        (wg/block "Data" [wg/table (:data @state)])])))
 
 (defn $index [{db :db sch :schema tbl :table :as params}]
-  [l/layout {:params params
-             :bread-crump [{:title [:span (icon :folder-o) " " sch]
-                            :href (str "#/db/" db "/schema/" sch)}
-                           {:title [:span (icon :table) " " tbl]}]}
-   [:div#database
-    (style [:#database {}])
-    [table db tbl]]])
+  [:div#database
+   (style [:#database {}])
+   [table db tbl]])

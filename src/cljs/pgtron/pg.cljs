@@ -46,7 +46,7 @@
 
 
 (defn exec [db sql]
-  (let [cs (:connection-string @state/state)
+  (let [cs (:connection-string  @(state/current-tab))
         _ (println "Connect on " cs)
         sql (if (map? sql) (hsql/format (honey-macro sql) :parameterizer :postgresql) [sql])
         ch (async/chan)

@@ -152,8 +152,8 @@
 
 
 (def index-style
-  [:#demo {:$padding [2 4]}
-   [:.items #_{:-webkit-columns 3}]
+  [:.demo {:$padding [1 2]}
+   [:.items]
    [:.mod {:display "inline-block"
            :$padding [0 1]
            :$color :gray
@@ -181,12 +181,10 @@
    [:input {:$color [:black :white] :width "100%" :display "block"}]])
 
 
-(defn url [i]
-  (str "#/" (.stringify js/JSON i)))
+(defn url [i] (str "#/" (.stringify js/JSON i)))
 
-(defn $index [params]
-  (let [model (r/atom {:search "\\l"})
-        input-ch (a/chan)
+(defn $index [model params]
+  (let [input-ch (a/chan)
 
         handle (ch/bind-chan input-ch (fn [q]
                                         (swap! model assoc :selection 1)
@@ -215,33 +213,32 @@
         query-ch  (ch/fmap parsed-ch (fn [m] (swap! model assoc :query m) m))]
 
     (ch/bind-query query-ch "sample"  mk-query model [:data])
-    (am/go (a/>! input-ch (:search @model)))
+    (am/go (when-let [q (:search @model)] (a/>! input-ch q)))
 
-    (fn []
-      (let [data (:data @model)
+    (fn [model params]
+      (let [data      (:data @model)
             selection (:selection @model)
-            query (:query @model)]
-        [l/layout {:params params}
-         [:div#demo
-          (style index-style)
-          [:input {:on-change handle :value (:search @model) :on-key-down navigate :auto-focus true}]
-          [:div.mods
-           (for [[k v] modifiers]
-             [:a.mod {:key v
-                      :on-click (set-modifier v k)
-                      :class (when (get-in query [:modifiers v]) "active")}
-              [:strong (name k)] " " (str v)])]
-          [:br]
-          [:br]
-          [:div.items
-           (when (empty? data) [:h3 ":( nothing to show ..."])
-           (for [i data]
-             [:a.item {:key (.-id i)
-                       :href (url i)
-                       :title (url i)
-                       :class (when (= (.-row_number i) (str selection)) "selected")}
-              (icon (or (get icons (.-type i)) :ups))
-              [:div.title
-               (.-name i)
-               " "
-               [:span.schema (.-schema i)]]])]]]))))
+            query     (:query @model)]
+        [:div.demo {:key (:id @model)}
+         (style index-style)
+         [:input {:on-change handle :value (:search @model) :on-key-down navigate :auto-focus true}]
+         [:div.mods
+          (for [[k v] modifiers]
+            [:a.mod {:key v
+                     :on-click (set-modifier v k)
+                     :class (when (get-in query [:modifiers v]) "active")}
+             [:strong (name k)] " " (str v)])]
+         [:br]
+         [:br]
+         [:div.items
+          (when (empty? data) [:h3 ":( nothing to show ..."])
+          (for [i data]
+            [:a.item {:key (.-id i)
+                      :href (url i)
+                      :title (url i)
+                      :class (when (= (.-row_number i) (str selection)) "selected")}
+             (icon (or (get icons (.-type i)) :ups))
+             [:div.title
+              (.-name i)
+              " "
+              [:span.schema (.-schema i)]]])]]))))

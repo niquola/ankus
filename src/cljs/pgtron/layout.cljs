@@ -14,7 +14,7 @@
                      :$absolute [nil 0 0 0]}])
    [:span.text-muted (:connection-string @state/state) " | " (:pg-info @state/state)]])
 
-(defn layout [glob cnt]
+(defn layout [cnt]
   [:div#layout
    (st/main-style)
    (style
@@ -30,7 +30,7 @@
      [:#footer {:position "absolute" :$height 2 :left 0 :right 0 :bottom 0}]])
    [tabs/tabs]
    [:div#center cnt]
-   [footer glob]])
+   [footer {}]])
 
 
 (def page-style

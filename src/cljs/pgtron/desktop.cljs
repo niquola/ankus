@@ -13,8 +13,10 @@
             [pgtron.query :as query]
             [pgtron.table :as table]
             [pgtron.signin :as signin]
+            [pgtron.state :as state]
             [pgtron.create :as create]
-            [route-map.core :as rm])
+            [route-map.core :as rm]
+            [reagent.core :as r])
 
   (:import goog.History))
 
@@ -26,27 +28,31 @@
              "new"   #'create/routes
              "db"    #'db/routes})
 
-(defn not-found [path] [l/layout {} [:h1 (str "Page " path " not found")]])
-
-(defn dispatch [event]
-  (if-let [m (rm/match [:GET (.-token event)] routes)]
-    (let [mws (mapcat :mw (:parents m))
-          h   #(session/put! :current-page [(:match m) (:params m)])
-          stack (reduce (fn [acc x] (x acc)) h (reverse mws))]
-      (stack m))
-    (session/put! :current-page [not-found (.-token event)])))
+(defn not-found [path] [:h1 (str "Page " path " not found")])
 
 (defn hook-browser-navigation! []
   (doto (History. false nil (.getElementById js/document "_hx"))
-    (events/listen EventType/NAVIGATE dispatch) (.setEnabled true)))
+    (events/listen EventType/NAVIGATE
+                   (fn [event]
+                     (when-let [tab (state/current-tab)]
+                       (swap! tab assoc :href (.-token event)))
+                     )) (.setEnabled true)))
 
-(defn current-page []
-  [:div (session/get :current-page)])
+(defn test-cmp [tab-id]
+  [:h1 tab-id])
+
+(defn root []
+  (fn []
+    [l/layout
+     (when-let [tab-id (:current-tab @state/state)]
+       (let [current-tab (get-in @state/state [:tabs tab-id])]
+         [:div
+          (when-let [m (rm/match [:GET (:href current-tab)] routes)]
+            [:div {:key tab-id}
+             [(:match m) (r/cursor state/state [:tabs tab-id]) (:params m)]])]))]))
 
 (defn mount-root []
-  (reagent/render
-   [current-page]
-   (.getElementById js/document "app")))
+  (reagent/render [root] (.getElementById js/document "app")))
 
 (defn init! []
   (hook-browser-navigation!)
