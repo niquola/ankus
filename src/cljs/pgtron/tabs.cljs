@@ -51,38 +51,47 @@
       (let [tabs    (vals (:tabs @state/state))
             current (:current-tab @state/state)]
         [:div#tabs
-        (style [:#tabs
-                {:$color [:light-gray :bg-2]}
-                [:.href  {:$text [0.8 1]
-                          :width "100%"
-                          :$color [:black :light-gray]
-                          :border "none"
-                          :$padding 0.5
-                          :box-shadow "none"
-                          :display "block"
-                          :border-radius 0}]
+        (style [:#tabs {:$color [:light-gray :bg-1] :padding-top "4px"}
+                [:.location {:$color [:white :bg-0]
+                             :$padding 0.2}
+                 [:.href  {:$text [0.8 1]
+                           :$margin [0.3 1]
+                           :$color [:white :bg-1]
+                           :border "none"
+                           :width "97%"
+                           :$padding [0.2 1]
+                           :box-shadow "none"
+                           :border-radius "4px"
+                           :display "block"}]]
                 [:.tab {:position "relative"
                         :cursor "pointer"
-                        :display "inline-block" :$margin [0 1 0 0]
+                        :display "inline-block"
+                        :$text [0.8 1.5]
+                        :border-top "2px solid transparent"
+                        :$margin [0 1 0 0]
                         :z-index 100
-                        :$padding [0.1 1]}
-                 [:&.active {:$color [:white :black]}]
-                 [:.remove [:&:hover {:$color :red}]]
-                 [:input {:$width 40}]]])
+                        :$padding [0 1]}
+                 [:.circle {:$color :gray}]
+                 [:&.active {:$color [:white :bg-0]
+                             :border-color "#6ED0E0"}
+                  [:.circle {:$color :blue}]]
+                 [:.remove [:&:hover {:$color :red}]]]])
          [:div.tab-list
           (for [tab tabs]
             [:div.tab {:key (str (:id tab))
                        :class (when (= current (:id tab)) "active")
                        :on-click (handle-selection (:id tab))}
-             (when-let [i (:icon tab)] (icon i)) " "
+             (if-let [i (:icon tab)]
+               (icon i) [:span.circle "●"]) "  "
              (:title tab) " "
              (when-not (:non-removable tab)
                [:span.remove {:on-click (handle-close (:id tab))} (icon :close)])])]
          (when-let [current-tab (state/current-tab)]
            (when-not (:no-location @current-tab)
-             [:input.href {:value (:href @current-tab)
-                           :on-change bind-href
-                           :on-key-down apply-href}]))]))))
+             [:div.location
+              [:input.href {:value (:href @current-tab)
+                            :on-change bind-href
+                            :on-key-down apply-href}]]))]))))
 (defn $signin []
   (let [state (r/atom {})
         form (form/form-cursor state [:auth] {:connection-string "nicola:nicola@localhost:5432/postgres"})

@@ -1,9 +1,6 @@
 (ns pgtron.query
-  (:require-macros [cljs.core.async.macros :as m :refer [go alt!]])
   (:require [reagent.core :as reagent :refer [atom]]
-            [pgtron.layout :as l]
             [pgtron.pg :as pg]
-            [cljs.core.async :refer [>! <!]]
             [chloroform.core :as form]
             [pgtron.widgets :as wg]
             [charty.core :as chart]
@@ -56,48 +53,47 @@ WHERE constraint_type = 'FOREIGN KEY'"}
    LIMIT 10"}])
 
 
-(defn $index [{db :db :as params}]
-  (let [state (atom {:sql (:sql (first examples))})
-        handle (fn [ev] (pg/query-assoc (or db "postgres") (:sql @state) state [:result] identity))]
+(defn $index [state]
+  (let [handle (fn [ev] (pg/query-assoc (:sql @state) state [:result] identity))]
+    (swap! state assoc :sql (:sql (first examples)))
     (fn []
-      [l/layout {:params params :bread-crump [{:title "Query" :icon :search}]}
-       [:div#query
-        (style
-         [:#query
-          [:.results {:$margin 1}]
-          [:.example {:padding "0 0.3em" :cursor "pointer"}]
-          [:textarea
-           {:$color [:white :bg-0]
-            :$padding 1
-            :$height 4
-            :$text [1.1 1.5]}]])
-        [form/codemirror state [:sql] {:theme "railscasts"
-                                       :mode "text/x-sql"
-                                       :extraKeys {"Ctrl-Enter" handle}}]
-        [:p.text-muted "Press [Ctrl-Enter] to execute query. Examples: "
-         (for [e examples]
-           [:a.example {:key (:title e) :on-click (fn [ev] (.preventDefault ev)
-                                                    (swap! state assoc :sql (:sql e))
-                                                    (handle ev))}
-            (:title e) " "])]
-        (let [rows (:result @state)
-              fst (first rows)]
-          [:div.results
-           (cond
-             (pie? fst) [:div
-                         [:h3 "Pie Chart:"]
-                         [chart/pie {:width 1000 :height 600} (map (fn [x] {:label (.-pie_label x) :value (.-pie_value x)}) rows)]]
+      [:div#query
+       (style
+        [:#query {:$padding [0 1]}
+         [:.results {:$margin [1 0]}]
+         [:.example {:padding "0 0.3em" :cursor "pointer"}]
+         [:textarea
+          {:$color [:white :bg-0]
+           :$padding 1
+           :$height 4
+           :$text [1.1 1.5]}]])
+       [form/codemirror state [:sql] {:theme "railscasts"
+                                      :mode "text/x-sql"
+                                      :extraKeys {"Ctrl-Enter" handle}}]
+       [:p.text-muted "Press [Ctrl-Enter] to execute query. Examples: "
+        (for [e examples]
+          [:a.example {:key (:title e) :on-click (fn [ev] (.preventDefault ev)
+                                                   (swap! state assoc :sql (:sql e))
+                                                   (handle ev))}
+           (:title e) " "])]
+       (let [rows (:result @state)
+             fst (first rows)]
+         [:div.results
+          (cond
+            (pie? fst) [:div
+                        [:h3 "Pie Chart:"]
+                        [chart/pie {:width 1000 :height 600} (map (fn [x] {:label (.-pie_label x) :value (.-pie_value x)}) rows)]]
 
-             (graph? fst) [:div
-                           [:h3 "Graph Chart:"]
-                           [chart/force-graph {:width 1000 :height 600} rows]]
+            (graph? fst) [:div
+                          [:h3 "Graph Chart:"]
+                          [chart/force-graph {:width 1000 :height 600} rows]]
 
-             (explain? fst) [:div [:h1 "Graph"]
-                             [chart/sankey {:width 1200 :height 800}
-                              (chart/plan-to-sankey fst)]]
-             
-             (chart? fst) [:div
-                           [:h3 "Area Chart:"]
-                           [chart/area-chart {:width 1000 :height 400}
-                            (map (fn [d] {:x (.-area_x d) :y (.-area_y d)}) rows)]])
-           [wg/table rows]])]])))
+            (explain? fst) [:div [:h1 "Graph"]
+                            [chart/sankey {:width 1200 :height 800}
+                             (chart/plan-to-sankey fst)]]
+            
+            (chart? fst) [:div
+                          [:h3 "Area Chart:"]
+                          [chart/area-chart {:width 1000 :height 400}
+                           (map (fn [d] {:x (.-area_x d) :y (.-area_y d)}) rows)]])
+          [wg/table rows]])])))

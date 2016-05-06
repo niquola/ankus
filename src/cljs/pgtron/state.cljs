@@ -4,7 +4,6 @@
             [reagent.core :as r]
             [cljs.core.async :refer [>! <!]]))
 
-
 (def state (atom {:current-tab "_new"
                   :tabs {"_new" {:icon "plus"
                                  :id "_new"

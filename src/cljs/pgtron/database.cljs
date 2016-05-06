@@ -73,7 +73,7 @@
             [:span (.-views_count tbl) " views; "]]])]])))
 
 (defn *tables [db state]
-  (go (let [res (<! (pg/exec db tables-query))]
+  (go (let [res (<! (pg/exec tables-query))]
       (swap! state assoc :items
              (->> res
                   (group-by (fn [x] (.-schemaname x)))
@@ -158,7 +158,7 @@
             [:&.template {:border-top "6px solid #777"}]]])
 
    [:div.section
-    [:a.tbox {:href (str "#/db/" db "/query")}
+    [:a.tbox {:href (str "#/query")}
      [icon :search]
      [:h2 "Queries"]]]
 
@@ -229,15 +229,15 @@
         href (fn [tp id] (str "#/db/" db "/schema/" sch "/" tp "/" id))
         handle (fn [ev]
                  (let [q (.. ev -target -value)]
-                   (pg/query-assoc db (procs-sql sch q)  state [:procs])
+                   (pg/query-assoc (procs-sql sch q)  state [:procs])
                    (swap! state
                           (fn [old]
                             (-> old
                                 (assoc :tables (filter-str q (:tables old)))
                                 (assoc :views (filter-str q (:views old))))))))]
-    (pg/query-assoc db (tables-sql sch) state [:tables])
-    (pg/query-assoc db (views-sql sch)  state [:views])
-    (pg/query-assoc db (procs-sql sch "")  state [:procs])
+    (pg/query-assoc  (tables-sql sch) state [:tables])
+    (pg/query-assoc  (views-sql sch)  state [:views])
+    (pg/query-assoc  (procs-sql sch "")  state [:procs])
     (fn []
       [:div#schema
        (style [:#schema {:$padding [1 2]}
@@ -274,12 +274,12 @@
 
 
 (def routes
-  {[:db] {:GET #'$index
-          "query" {:GET #'query/$index}
-          "schema" {[:schema] {:GET #'$schema
-                               "table" {[:table] {:GET #'table/$index}}
-                               "proc" {[:proc]   {:GET #'proc/$index}}
-                               "view" {[:view]   {:GET #'view/$index}}}}
+  {:GET #'$index
+   "query" {:GET #'query/$index}
+   "schema" {[:schema] {:GET #'$schema
+                        "table" {[:table] {:GET #'table/$index}}
+                        "proc" {[:proc]   {:GET #'proc/$index}}
+                        "view" {[:view]   {:GET #'view/$index}}}}
 
-          "tbl" {[:tbl] {:GET #'table/$index}}
-          "new" #'create/routes}})
+   "tbl" {[:tbl] {:GET #'table/$index}}
+   "new" #'create/routes})

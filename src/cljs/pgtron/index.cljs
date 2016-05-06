@@ -152,7 +152,7 @@
 
 
 (def index-style
-  [:.demo {:$padding [1 2]}
+  [:.index {:$padding [0 1]}
    [:.items]
    [:.mod {:display "inline-block"
            :$padding [0 1]
@@ -163,8 +163,6 @@
     [:&:hover {:text-decoration "none"}]
     [:&.active {:$color [:white :bg-blue]}]]
    [:.item {:display "block"
-            :$width 50
-            :float "left"
             :$color :light-gray
             :text-decoration "none"
             :border-radius "4px"
@@ -212,14 +210,14 @@
         parsed-ch (ch/fmap (ch/debounce input-ch 200) parse-modifiers)
         query-ch  (ch/fmap parsed-ch (fn [m] (swap! model assoc :query m) m))]
 
-    (ch/bind-query query-ch "sample"  mk-query model [:data])
+    (ch/bind-query query-ch mk-query model [:data])
     (am/go (when-let [q (:search @model)] (a/>! input-ch q)))
 
     (fn [model params]
       (let [data      (:data @model)
             selection (:selection @model)
             query     (:query @model)]
-        [:div.demo {:key (:id @model)}
+        [:div.index
          (style index-style)
          [:input {:on-change handle :value (:search @model) :on-key-down navigate :auto-focus true}]
          [:div.mods
@@ -228,8 +226,6 @@
                      :on-click (set-modifier v k)
                      :class (when (get-in query [:modifiers v]) "active")}
              [:strong (name k)] " " (str v)])]
-         [:br]
-         [:br]
          [:div.items
           (when (empty? data) [:h3 ":( nothing to show ..."])
           (for [i data]

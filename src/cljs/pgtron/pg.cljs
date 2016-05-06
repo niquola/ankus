@@ -14,7 +14,6 @@
 
 (def conn "postgres://crudtest:crudtest@localhost/")
 
-
 (def hsql-macros
   {:$call hsql/call
    :$raw hsql/raw})
@@ -45,7 +44,7 @@
     ch))
 
 
-(defn exec [db sql]
+(defn exec [sql]
   (let [cs (:connection-string  @(state/current-tab))
         _ (println "Connect on " cs)
         sql (if (map? sql) (hsql/format (honey-macro sql) :parameterizer :postgresql) [sql])
@@ -67,21 +66,15 @@
                    (.end cl))))))
     ch))
 
-(defn query-assoc [db sql state path & [proc]]
+(defn query-assoc [sql state path & [proc]]
   (let [proc (or proc identity)]
     (go
-      (let [res (<! (exec db sql))]
+      (let [res (<! (exec sql))]
         (swap! state assoc-in path (proc res))))))
 
-(defn query-first-assoc [db sql state path & [proc]]
+(defn query-first-assoc [sql state path & [proc]]
   (let [proc (or proc identity)]
     (go
-      (let [res (<! (exec db sql))]
+      (let [res (<! (exec sql))]
         (swap! state assoc-in path (proc (first res)))))))
 
-(comment
-  (hsql/format {:select [(hsql/call :json_build_object
-                                    "key"
-                                    {:select [1] :from [:tbl]})] :from [:bar]})
-
-  )

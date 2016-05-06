@@ -15,22 +15,23 @@
    [:span.text-muted (:connection-string @state/state) " | " (:pg-info @state/state)]])
 
 (defn layout [cnt]
-  [:div#layout
-   (st/main-style)
-   (style
-    [:#layout {:position "absolute" :top 0 :left 0 :right 0 :bottom 0 :overflow "hidden"}
-     [:#nav {:position "absolute"
-             :top 0 :left 0 :right 0 :$height 5 
-             :box-shadow "0 1px 3px #090909, 0 1px 2px #111"
-             :z-index 1000}]
-     [:#center {:position "absolute"
-                :$padding 0 ;;[1 4 1 6]
-                :$top 5 :left 0 :right 0 :$bottom 2
-                :overflow-x "auto"}]
-     [:#footer {:position "absolute" :$height 2 :left 0 :right 0 :bottom 0}]])
-   [tabs/tabs]
-   [:div#center cnt]
-   [footer {}]])
+  (let [top-height 4]
+    [:div#layout
+     (st/main-style)
+     (style
+      [:#layout {:position "absolute" :top 0 :left 0 :right 0 :bottom 0 :overflow "hidden"}
+       [:#nav {:position "absolute"
+               :top 0 :left 0 :right 0 :$height top-height
+               :box-shadow "0 1px 3px #090909, 0 1px 2px #111"
+               :z-index 1000}]
+       [:#center {:position "absolute"
+                  :$padding [1 0]
+                  :$top top-height :left 0 :right 0 :$bottom 2
+                  :overflow-x "auto"}]
+       [:#footer {:position "absolute" :$height 2 :left 0 :right 0 :bottom 0}]])
+     [tabs/tabs]
+     [:div#center cnt]
+     [footer {}]]))
 
 
 (def page-style

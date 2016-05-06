@@ -15,15 +15,15 @@
              (when cb (cb q))
              (am/go (a/>! ch q)))))
 
-(defn bind-query [ch db sql-fn state pth]
+(defn bind-query [ch sql-fn state pth]
   (am/go-loop []
     (let [q (a/<! ch)]
-      (pg/query-assoc db (sql-fn q) state pth)) (recur)))
+      (pg/query-assoc (sql-fn q) state pth)) (recur)))
 
 (defn bind-query-first [ch sql-fn state pth]
   (am/go-loop []
     (let [q (a/<! ch)]
-      (pg/query-first-assoc "postgres" (sql-fn q) state pth)) (recur)))
+      (pg/query-first-assoc (sql-fn q) state pth)) (recur)))
 
 (defn debounce [in ms]
   (let [out (a/chan)]
