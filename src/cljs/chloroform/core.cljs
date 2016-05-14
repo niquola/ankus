@@ -108,11 +108,11 @@
   (fn [] (swap! doc assoc-in [:data key] value)))
 
 (def simple-inputs
-  {:string     [:input {:type "text"}]
-   :password   [:input {:type "password"}]
-   :email      [:input {:type "email"}]
+  {:string     [:input.form-control {:type "text"}]
+   :password   [:input.form-control {:type "password"}]
+   :email      [:input.form-control {:type "email"}]
    :text       [:textarea {:rows "3"}]
-   :json       [:textarea {} ]
+   :json       [:textarea.form {} ]
    :sql        [:textarea {} ]
    :javascript [:textarea {} ]
    :checkbox   [:input {:type "checkbox"}]})

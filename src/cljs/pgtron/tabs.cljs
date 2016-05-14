@@ -17,22 +17,24 @@
         {:status :error   :error "Could not connect to server"}
         {:status :success :version (.-version (first res))}))))
 
+(defn select-tab [id]
+  (when-not (= (:current-tab @state/state) id)
+    (swap! state/state assoc :current-tab id)
+    (aset (.. js/window -location) "hash" (:href @(state/current-tab)))))
 
-(defn- add-tab [id cs]
+(defn- add-tab [id cs conn]
   (swap! state/state update-in [:tabs] assoc id
          {:id id
           :href "/dashboard"
-          :title cs
-          :connection-string (str "postgres://" cs)}))
+          :title (str (:host conn) "/" (:database conn))
+          :connection conn
+          :connection-string (str "postgres://" cs)})
+  (select-tab id))
 
 (defn- remove-tab [id]
   (swap! state/state update-in [:tabs]
          (fn [old] (dissoc old id))))
 
-(defn select-tab [id]
-  (when-not (= (:current-tab @state/state) id)
-    (swap! state/state assoc :current-tab id)
-    (aset (.. js/window -location) "hash" (:href @(state/current-tab)))))
 
 (defn- handle-selection [id]
   (fn [ev] (select-tab id)))
@@ -81,8 +83,7 @@
             [:div.tab {:key (str (:id tab))
                        :class (when (= current (:id tab)) "active")
                        :on-click (handle-selection (:id tab))}
-             (if-let [i (:icon tab)]
-               (icon i) [:span.circle "●"]) "  "
+             (if-let [i (:icon tab)] (icon i) [:span.circle "●"]) "  "
              (:title tab) " "
              (when-not (:non-removable tab)
                [:span.remove {:on-click (handle-close (:id tab))} (icon :close)])])]
@@ -93,15 +94,28 @@
               [:input.href {:value (:href @current-tab)
                             :on-change bind-href
                             :on-key-down apply-href}]]))]))))
+
+(defn mk-connection-string [form]
+  (str (:user form) ":" (:password form) "@" (:host form)
+       (when-let [port (:port form)] (str ":" port))
+       "/" (:database form)))
+
 (defn $signin []
   (let [state (r/atom {})
-        form (form/form-cursor state [:auth] {:connection-string "nicola:nicola@localhost:5432/postgres"})
+        form (form/form-cursor state [:auth]
+                               {:connection-string "nicola:nicola@localhost:5432/postgres"
+                                :host "localhost"
+                                :port "5432"
+                                :user "nicola"
+                                :password "nicola"
+                                :database "sample"})
         submit (fn [ev]
-                 (let [cs (get-in @form [:data :connection-string])]
-                   (println "cs" cs)
+                 (let [form (get-in @form [:data])
+                       cs (mk-connection-string form)]
+                   (println "Connect" cs)
                    (go (let [res (<! (test-connection cs))]
                          (if (= :success (:status res))
-                           (add-tab (str (gensym)) cs)
+                           (add-tab (str (gensym)) cs form)
                            (swap! state assoc :error (:error res)))))))]
    (fn []
      [:div#signin
@@ -118,12 +132,16 @@
                                     :border "2px solid #555"
                                     :$color [:white :bg-2]}]])
       [form/form form {:class "form" :on-submit submit}
-       [:$row {:name :connection-string
+       #_[:$row {:name :connection-string
                :as :string
                :class "connection-string"
                :placeholder "user:password@localhost:5432/postgres"
                :$required true}]
-       (when-let [err (:error @state)]
-         [:div.alert.alert-dangerous err])
+       [:$row {:name :host :as :string :$required true}]
+       [:$row {:name :host :as :string :$required true}]
+       [:$row {:name :database :as :string :$required true}]
+       [:$row {:name :user :as :string :$required true}]
+       [:$row {:name :password :as :password :$required true}]
+       (when-let [err (:error @state)] [:div.alert.alert-dangerous err])
        #_[:pre (pr-str @form)]
        [:button.btn.btn-success.btn-lg {:type "submit"} "Connect"]]])))

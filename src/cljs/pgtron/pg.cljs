@@ -27,6 +27,7 @@
    hsql))
 
 (defn raw-exec [conn sql]
+  (println "Try to connect" conn)
   (let [ch (async/chan)
         cl (Client. conn)]
     (.connect
@@ -36,9 +37,8 @@
        (if (not err)
          (.query cl sql
                  (fn [err res]
-                   (if err
-                     (.error js/console err)
-                     (async/put! ch (.-rows res)))
+                   (if err (.error js/console err)
+                           (async/put! ch (.-rows res)))
                    (.end cl)))
          (do (async/put! ch {:error err}) (.log js/console "Error" err)))))
     ch))
@@ -78,3 +78,12 @@
       (let [res (<! (exec sql))]
         (swap! state assoc-in path (proc (first res)))))))
 
+(comment
+
+  (go
+    (println
+     (<! (raw-exec
+          "postgres://nicola:nicola@localhost:5432/postgres"
+          "SELECT 1"))))
+
+  )
